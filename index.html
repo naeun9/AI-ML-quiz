@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인공지능과기계학습 — 퀴즈</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --bg3: #21262d;
+  --border: #30363d;
+  --accent: #58a6ff;
+  --accent2: #bc8cff;
+  --green: #3fb950;
+  --red: #f85149;
+  --yellow: #d29922;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --code-bg: #0d1117;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 15px;
+  line-height: 1.75;
+  min-height: 100vh;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; }
+.screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ── START ── */
+#start-screen {
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 0%, rgba(88,166,255,0.08) 0%, transparent 60%);
+}
+.logo { font-size: 48px; margin-bottom: 20px; }
+.start-title { font-size: 28px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 8px; }
+.start-title span { color: var(--accent); }
+.start-sub { font-size: 14px; color: var(--text2); margin-bottom: 36px; }
+.mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; max-width: 700px; width: 100%; margin-bottom: 30px; }
+.mode-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+.mode-card:hover { border-color: var(--accent); background: var(--bg3); transform: translateY(-2px); }
+.mode-card.selected { border-color: var(--accent); background: rgba(88,166,255,0.1); }
+.mode-card .mc-icon { font-size: 28px; margin-bottom: 8px; }
+.mode-card .mc-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.mode-card .mc-desc { font-size: 12px; color: var(--text2); }
+.start-btn {
+  background: var(--accent);
+  color: #0d1117;
+  border: none;
+  padding: 14px 48px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+.start-btn:hover { background: #79c0ff; transform: translateY(-1px); }
+.stats-preview { display: flex; gap: 24px; margin-top: 24px; }
+.stat-pill { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 16px; font-size: 13px; color: var(--text2); }
+.stat-pill strong { color: var(--text); }
+
+/* ── QUIZ ── */
+#quiz-screen { padding: 0; }
+.quiz-topbar {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.quiz-topbar .qnum { font-size: 13px; color: var(--text2); white-space: nowrap; }
+.progress-bar { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; transition: width 0.4s ease; }
+.score-live { font-size: 13px; font-weight: 700; color: var(--green); white-space: nowrap; }
+.exit-btn { background: none; border: 1px solid var(--border); color: var(--text2); padding: 4px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: all 0.2s; }
+.exit-btn:hover { border-color: var(--red); color: var(--red); }
+
+.quiz-body { flex: 1; padding: 32px 24px; max-width: 800px; margin: 0 auto; width: 100%; }
+
+.q-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.q-badge { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 4px; }
+.q-badge.obj { background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid rgba(88,166,255,0.3); }
+.q-badge.sub { background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+.q-badge.code { background: rgba(188,140,255,0.12); color: var(--accent2); border: 1px solid rgba(188,140,255,0.3); }
+.q-badge.key { background: rgba(248,81,73,0.12); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+.q-num-badge { font-size: 13px; color: var(--text2); }
+
+.q-text {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.8;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+.q-text strong { color: #f0c060; }
+.q-text code {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--accent2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin: 14px 0;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #abb2bf;
+}
+.code-block .kw { color: #c678dd; }
+.code-block .fn { color: #61afef; }
+.code-block .cls { color: #e5c07b; }
+.code-block .str { color: #98c379; }
+.code-block .cm { color: #5c6370; font-style: italic; }
+.code-block .num { color: #d19a66; }
+.code-block .blank {
+  display: inline-block;
+  background: #f38ba8;
+  color: #1e1e2e;
+  font-weight: 700;
+  padding: 0 8px;
+  border-radius: 3px;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* 선택지 */
+.choices { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+.choice-btn {
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: all 0.15s;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+}
+.choice-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(88,166,255,0.06); }
+.choice-btn .ch-label {
+  font-weight: 800;
+  color: var(--accent);
+  min-width: 22px;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+.choice-btn.correct { border-color: var(--green); background: rgba(63,185,80,0.1); }
+.choice-btn.correct .ch-label { color: var(--green); }
+.choice-btn.wrong { border-color: var(--red); background: rgba(248,81,73,0.08); }
+.choice-btn.wrong .ch-label { color: var(--red); }
+.choice-btn.dimmed { opacity: 0.4; }
+.choice-btn:disabled { cursor: default; }
+.choice-btn code {
+  background: var(--bg3);
+  color: var(--accent2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* 입력형 */
+.input-area { margin-bottom: 20px; }
+.input-area textarea, .input-area input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.15s;
+  min-height: 60px;
+}
+.input-area textarea:focus, .input-area input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.input-area .input-hint { font-size: 12px; color: var(--text2); margin-top: 6px; }
+
+/* 피드백 박스 */
+.feedback-box {
+  display: none;
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  animation: fadeIn 0.3s ease;
+}
+.feedback-box.show { display: block; }
+.feedback-box.correct { background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3); }
+.feedback-box.wrong { background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.3); }
+.feedback-box.info { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.25); }
+.feedback-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.feedback-box.correct .feedback-title { color: var(--green); }
+.feedback-box.wrong .feedback-title { color: var(--red); }
+.feedback-box.info .feedback-title { color: var(--accent); }
+.feedback-ans { font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 8px; }
+.feedback-ans strong { color: #f0c060; }
+.feedback-ans code { background: var(--bg3); color: var(--accent2); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 1px 5px; border-radius: 3px; }
+.feedback-exp { font-size: 13px; color: var(--text2); line-height: 1.7; padding-top: 8px; border-top: 1px solid var(--border); margin-top: 8px; }
+.feedback-exp strong { color: var(--text); }
+.feedback-exp code { background: var(--bg3); color: var(--accent2); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 1px 5px; border-radius: 3px; }
+
+/* 버튼 */
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-check, .btn-next, .btn-skip {
+  padding: 11px 28px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.2s;
+}
+.btn-check { background: var(--accent); color: #0d1117; }
+.btn-check:hover { background: #79c0ff; }
+.btn-check:disabled { opacity: 0.4; cursor: default; }
+.btn-next { background: var(--green); color: #0d1117; }
+.btn-next:hover { background: #56d364; }
+.btn-skip { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+.btn-skip:hover { border-color: var(--yellow); color: var(--yellow); }
+
+/* ── RESULT ── */
+#result-screen {
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 0%, rgba(63,185,80,0.08) 0%, transparent 60%);
+}
+.result-emoji { font-size: 64px; margin-bottom: 16px; animation: bounce 0.6s ease; }
+.result-title { font-size: 26px; font-weight: 900; margin-bottom: 8px; }
+.result-score-big { font-size: 64px; font-weight: 900; color: var(--accent); line-height: 1; margin: 16px 0; }
+.result-score-big span { font-size: 28px; color: var(--text2); }
+.result-sub { font-size: 15px; color: var(--text2); margin-bottom: 32px; }
+.result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; max-width: 500px; width: 100%; margin-bottom: 32px; }
+.result-stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.result-stat .rs-val { font-size: 28px; font-weight: 900; }
+.result-stat .rs-val.g { color: var(--green); }
+.result-stat .rs-val.r { color: var(--red); }
+.result-stat .rs-val.y { color: var(--yellow); }
+.result-stat .rs-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.result-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.result-btns button {
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.2s;
+  border: none;
+}
+.btn-retry { background: var(--accent); color: #0d1117; }
+.btn-retry:hover { background: #79c0ff; }
+.btn-wrong-only { background: var(--red); color: #fff; }
+.btn-wrong-only:hover { background: #ff6b6b; }
+.btn-home { background: var(--bg3); color: var(--text); border: 1px solid var(--border) !important; }
+.btn-home:hover { border-color: var(--accent) !important; color: var(--accent); }
+
+/* 범주별 성적 */
+.category-result { max-width: 500px; width: 100%; margin-bottom: 28px; text-align: left; }
+.cat-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.cat-label { font-size: 13px; color: var(--text2); min-width: 70px; }
+.cat-bar-wrap { flex: 1; height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+.cat-bar { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+.cat-pct { font-size: 13px; font-weight: 700; min-width: 36px; text-align: right; }
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+@keyframes bounce { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } }
+
+/* 모바일 */
+@media(max-width:600px) {
+  .quiz-body { padding: 20px 16px; }
+  .result-grid { grid-template-columns: repeat(2,1fr); }
+  .mode-grid { grid-template-columns: 1fr; }
+}
+
+/* 형광펜 효과 */
+.hl { background: rgba(240,192,96,0.2); border-radius: 2px; padding: 0 2px; }
+</style>
+</head>
+<body>
+
+<!-- ══ START ══ -->
+<div id="start-screen" class="screen active">
+  <div class="start-title">인공지능과 기계학습</div>
+  <div class="start-sub">Week 2~7</div>
+
+  <div class="mode-grid">
+    <div class="mode-card selected" onclick="selectMode('all', this)">
+      <div class="mc-icon">📚</div>
+      <div class="mc-title">전체 문제</div>
+      <div class="mc-desc">110문제 전부</div>
+    </div>
+    <div class="mode-card" onclick="selectMode('obj', this)">
+      <div class="mc-icon">☑️</div>
+      <div class="mc-title">객관식</div>
+      <div class="mc-desc">객관식 28문제</div>
+    </div>
+    <div class="mode-card" onclick="selectMode('sub', this)">
+      <div class="mc-icon">✏️</div>
+      <div class="mc-title">단답형</div>
+      <div class="mc-desc">단답형 44문제</div>
+    </div>
+    <div class="mode-card" onclick="selectMode('code', this)">
+      <div class="mc-icon">💻</div>
+      <div class="mc-title">코드 문제</div>
+      <div class="mc-desc">코드 38문제</div>
+    </div>
+    <div class="mode-card" onclick="selectMode('random20', this)">
+      <div class="mc-icon">🎲</div>
+      <div class="mc-title">랜덤 20문제</div>
+    </div>
+  </div>
+
+  <button class="start-btn" onclick="startQuiz()">시작하기</button>
+</div>
+
+<!-- ══ QUIZ ══ -->
+<div id="quiz-screen" class="screen">
+  <div class="quiz-topbar">
+    <div class="qnum" id="qnum-label">1 / 60</div>
+    <div class="progress-bar"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+    <div class="score-live" id="score-live">✓ 0</div>
+    <button class="exit-btn" onclick="goHome()">나가기</button>
+  </div>
+  <div class="quiz-body">
+    <div class="q-meta">
+      <span class="q-badge" id="q-badge">객관식</span>
+      <span class="q-num-badge" id="q-num-badge">Q1</span>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div id="q-extra"></div><!-- 코드블록 등 -->
+    <div class="choices" id="choices"></div>
+    <div class="input-area" id="input-area" style="display:none">
+      <textarea id="user-input" placeholder="답을 입력하세요..." rows="3"></textarea>
+      <div class="input-hint">* 단답형: 핵심 키워드 위주로 입력. 채점 후 정답과 비교하세요.</div>
+    </div>
+    <div class="feedback-box" id="feedback"></div>
+    <div class="btn-row">
+      <button class="btn-check" id="btn-check" onclick="checkAnswer()">확인</button>
+      <button class="btn-next" id="btn-next" onclick="nextQ()" style="display:none">다음 문제 →</button>
+      <button class="btn-skip" onclick="skipQ()">건너뛰기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div id="result-screen" class="screen">
+  <div class="result-emoji" id="result-emoji">🎉</div>
+  <div class="result-title" id="result-title">퀴즈 완료!</div>
+  <div class="result-score-big" id="result-score">0<span>/0</span></div>
+  <div class="result-sub" id="result-sub"></div>
+  <div class="result-grid">
+    <div class="result-stat"><div class="rs-val g" id="r-correct">0</div><div class="rs-label">✅ 정답</div></div>
+    <div class="result-stat"><div class="rs-val r" id="r-wrong">0</div><div class="rs-label">❌ 오답</div></div>
+    <div class="result-stat"><div class="rs-val y" id="r-skip">0</div><div class="rs-label">⏭ 건너뜀</div></div>
+  </div>
+  <div class="category-result" id="cat-result"></div>
+  <div class="result-btns">
+    <button class="btn-retry" onclick="retryAll()">🔄 다시 풀기</button>
+    <button class="btn-wrong-only" onclick="retryWrong()">❌ 틀린 문제만</button>
+    <button class="btn-home" onclick="goHome()">🏠 처음으로</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  문제 데이터 (60문제)
+// ═══════════════════════════════════════════
+const ALL_Q = [
+
+// ── 객관식 ──
+{id:1, type:'obj', cat:'SVM',
+ q:'다음 중 SVM이 특성 스케일에 민감한 이유와 해결책이 올바르게 짝지어진 것은?',
+ choices:['스케일이 다르면 결정 경계가 치우쳐짐 → StandardScaler 적용','스케일이 다르면 학습률이 자동 조정됨 → 별도 처리 불필요','스케일이 다르면 커널 트릭이 작동 안 함 → MinMaxScaler 적용','스케일은 SVM 성능에 영향 없음 → 스케일 조정 불필요'],
+ ans:0,
+ exp:'SVM은 마진을 최대화하는 과정에서 특성 크기 차이에 민감하다. 스케일 불균형 시 결정 경계가 치우쳐지므로 StandardScaler 적용 필수. 실습에서도 스케일 미적용 시 LinearSVC가 수렴 실패하는 것을 확인했다.'},
+
+{id:2, type:'obj', cat:'SVM',
+ q:'소프트 마진 SVM에서 하이퍼파라미터 C에 대한 설명으로 옳지 않은 것은?',
+ choices:['C가 크면 마진 오류를 적게 허용한다','C가 작으면 도로 폭이 넓어진다','모델이 과대적합이면 C를 증가시켜 규제한다','C가 너무 작으면 과소적합이 될 수 있다'],
+ ans:2,
+ exp:'과대적합 시에는 C를 감소시켜야 한다. C를 줄이면 오차를 허용해서 도로가 넓어지고, 모델이 개별 샘플에 지나치게 맞추는 것을 방지한다. C 증가 시 오히려 과대적합이 심해진다.'},
+
+{id:3, type:'obj', cat:'모델튜닝',
+ q:'GridSearchCV vs RandomizedSearchCV에 대한 설명으로 옳은 것은?',
+ choices:['GridSearchCV는 연속형 하이퍼파라미터 탐색에 더 유리하다','RandomizedSearchCV는 탐색 횟수를 n_iter로 고정할 수 있다','GridSearchCV는 RandomizedSearchCV보다 항상 더 좋은 성능을 보장한다','RandomizedSearchCV는 모든 하이퍼파라미터 조합을 탐색한다'],
+ ans:1,
+ exp:'RandomizedSearchCV의 핵심 장점: 탐색 횟수를 n_iter로 제어 가능, 연속형 파라미터도 확률분포에서 샘플링하여 더 많은 값 탐색 가능. GridSearchCV는 지정한 값의 모든 조합을 탐색하므로 탐색 공간이 크면 매우 느려진다.'},
+
+{id:4, type:'obj', cat:'전처리',
+ q:'OneHotEncoder와 pandas get_dummies()의 차이에 대한 설명으로 옳은 것은?',
+ choices:['get_dummies()는 훈련 시 학습한 카테고리를 기억해 새 데이터에 동일하게 적용한다','OneHotEncoder는 알 수 없는 카테고리를 기본적으로 예외 없이 0으로 처리한다','OneHotEncoder는 훈련 시 본 카테고리 수만큼 열을 출력하고, get_dummies()는 현재 데이터의 카테고리 수만큼만 출력한다','get_dummies()와 OneHotEncoder는 항상 동일한 결과를 출력한다'],
+ ans:2,
+ exp:'OneHotEncoder: 훈련 시 본 전체 카테고리 수만큼 열 출력, 알 수 없는 카테고리 기본적으로 예외 발생(handle_unknown="ignore"로 0 처리 가능). get_dummies(): 현재 데이터 카테고리만큼만 출력 — 새 데이터에 적용 시 열 수가 달라질 수 있어 ML 파이프라인에서 위험.'},
+
+{id:5, type:'obj', cat:'규제',
+ q:'라쏘(Lasso) 회귀의 특징으로 옳지 않은 것은?',
+ choices:['L1 노름을 사용한 규제 방식이다','일부 특성의 가중치를 정확히 0으로 만들어 자동으로 특성 선택을 수행한다','릿지 회귀보다 스무스하게 전역 최솟값으로 수렴한다','θᵢ=0에서 미분이 불가능해 서브그레이디언트 벡터를 사용한다'],
+ ans:2,
+ exp:'스무스하게 수렴하는 것은 릿지(L2). 라쏘는 최솟값 근처에서도 기울기가 0이 되지 않아 뚝뚝 끊어지며 진동하는 패턴을 보인다. L1(마름모 모양) vs L2(원 모양)에서 라쏘는 꼭짓점에서 축과 만나므로 가중치를 0으로 만든다.'},
+
+{id:6, type:'obj', cat:'SVM',
+ q:'다음 SVM 분류 클래스 비교 중 옳은 것은?',
+ choices:['LinearSVC는 커널 트릭을 지원한다','SVC의 시간 복잡도는 O(m×n)이다','SGDClassifier는 외부 메모리 학습을 지원한다','LinearSVC와 SVC 모두 스케일 조정이 필요 없다'],
+ ans:2,
+ exp:'표 5-1 기준: LinearSVC = O(m×n), 커널 트릭 없음 / SVC = O(m²n)~O(m³n), 커널 트릭 있음 / SGDClassifier = O(m×n), 외부 메모리 학습 가능. 세 클래스 모두 스케일 조정 필요.'},
+
+{id:7, type:'obj', cat:'선형회귀',
+ q:'정규 방정식(Normal Equation)에 대한 설명으로 옳지 않은 것은?',
+ choices:['비용 함수를 최소화하는 θ를 반복 없이 한 번에 구할 수 있다','훈련 샘플 수(m)가 많아질수록 느려진다','특성 수(n)가 많아질수록 계산이 느려진다','XᵀX의 역행렬이 없는 경우 SVD(유사역행렬)를 사용할 수 있다'],
+ ans:1,
+ exp:'정규 방정식과 SVD는 훈련 샘플 수(m)가 많아도 빠르다. 느려지는 것은 특성 수(n)가 많을 때 — (n+1)×(n+1) 역행렬 계산이 O(n²·⁴)~O(n³) 복잡도를 가지기 때문.'},
+
+{id:8, type:'obj', cat:'분류',
+ q:'OvR(One vs Rest)과 OvO(One vs One) 전략에 대한 설명으로 옳은 것은?',
+ choices:['OvO는 N개 클래스에 대해 N개의 분류기를 훈련시킨다','OvR은 SVM처럼 훈련 세트 크기에 민감한 알고리즘에 선호된다','OvO는 각 분류기 훈련에 두 클래스에 해당하는 샘플만 필요하다','사이킷런은 항상 OvR을 자동으로 선택한다'],
+ ans:2,
+ exp:'OvO: N(N-1)/2개 분류기, 각 분류기에 두 클래스 샘플만 사용 → SVM처럼 훈련 세트 크기에 민감한 알고리즘에 선호. OvR: N개 분류기, 대부분의 이진 분류 알고리즘에서 선호. 사이킷런은 알고리즘에 따라 자동으로 OvR 또는 OvO 선택.'},
+
+{id:29, type:'obj', cat:'경사하강법',
+ q:'배치 경사 하강법(Batch GD)이 확률적 경사 하강법(SGD)보다 시간이 오래 걸리는 이유는?',
+ choices:['배치 GD는 매 스텝마다 전체 훈련 세트를 사용해 그레이디언트를 계산하기 때문','배치 GD는 학습률을 자동으로 줄이기 때문','배치 GD는 지역 최솟값에 빠질 가능성이 높기 때문','배치 GD는 파라미터를 랜덤으로 초기화하기 때문'],
+ ans:0,
+ exp:'배치 GD: 매 스텝 전체 m개 샘플로 그레이디언트 계산 → m이 크면 매우 느림. SGD: 매 스텝 샘플 1개만 사용 → 빠르지만 불안정. 작년 기출 14번 문제!'},
+
+{id:30, type:'obj', cat:'로지스틱회귀',
+ q:'로지스틱 회귀에 대한 설명으로 옳지 않은 것은?',
+ choices:['입력 특성의 가중치 합을 계산하고 시그모이드 함수를 적용해 확률을 출력한다','추정 확률이 0.5 이상이면 양성 클래스(1)로 예측한다','비용 함수(로그 손실)는 정규 방정식으로 닫힌 형태의 해를 구할 수 있다','클래스가 3개 이상이면 자동으로 소프트맥스 회귀를 사용한다'],
+ ans:2,
+ exp:'로지스틱 회귀의 비용 함수(로그 손실)는 선형 회귀의 MSE와 달리 닫힌 형태의 해가 없다. 볼록 함수이기 때문에 지역 최솟값은 없지만, 반드시 경사 하강법으로 최솟값을 구해야 한다.'},
+
+{id:31, type:'obj', cat:'학습곡선',
+ q:'학습 곡선(learning curve)에서 과대적합 모델의 특징으로 옳은 것은?',
+ choices:['훈련 오차와 검증 오차 모두 높고, 두 곡선 사이 간격이 좁다','훈련 오차는 낮고 검증 오차는 높으며, 두 곡선 사이 간격이 넓다','훈련 오차와 검증 오차 모두 낮고, 두 곡선이 거의 일치한다','훈련 오차는 높고 검증 오차는 낮으며, 두 곡선이 교차한다'],
+ ans:1,
+ exp:'과대적합: 훈련 데이터에 지나치게 맞춰짐 → 훈련 오차 낮음, 검증 오차 높음, 간격 넓음. 과소적합: 둘 다 높고 간격 좁음. 더 큰 훈련 세트를 사용하면 과대적합 모델에서도 두 곡선이 점점 가까워짐.'},
+
+{id:32, type:'obj', cat:'분류',
+ q:'cross_val_predict()와 cross_val_score()의 차이로 옳은 것은?',
+ choices:['cross_val_predict()는 평가 점수를, cross_val_score()는 예측값을 반환한다','cross_val_predict()는 각 테스트 폴드에서 얻은 예측값을 반환하고, cross_val_score()는 평가 점수를 반환한다','두 함수 모두 동일한 결과를 반환한다','cross_val_predict()는 훈련 세트 전체로 예측한 값을 반환한다'],
+ ans:1,
+ exp:'cross_val_score(): k-폴드 교차 검증 후 평가 점수 배열 반환. cross_val_predict(): 각 테스트 폴드의 예측값 반환 → 오차 행렬 계산할 때 사용.'},
+
+{id:33, type:'obj', cat:'SVM',
+ q:'SVM 회귀(SVR)에 대한 설명으로 옳은 것은?',
+ choices:['SVM 분류와 동일하게 마진 밖의 샘플을 최대화하려 한다','마진 안에 들어오는 샘플이 늘어나면 모델 예측이 바뀐다','ε(epsilon)을 줄이면 서포트 벡터 수가 늘어나고 모델이 규제된다','SVR은 LinearSVR보다 훈련 세트가 커져도 속도가 빠르다'],
+ ans:2,
+ exp:'SVM 회귀: 마진 안에 샘플 최대한 많이 포함(분류와 반대). ε-insensitive: 마진 안에서는 훈련 샘플 추가해도 예측 무영향. ε 줄이면 서포트벡터 수 증가 → 규제됨. SVR은 m에 제곱~세제곱 비례로 느려짐.'},
+
+{id:51, type:'obj', cat:'파이프라인',
+ q:'다음 ColumnTransformer 코드에서 제대로 해석하지 못한 것은? (remainder=default_num_pipeline)',
+ choices:['"bedrooms" 파이프라인은 total_bedrooms / total_rooms 비율을 계산한다','"log" 파이프라인은 5개 특성에 로그 변환을 적용한다','"geo" 단계는 위도·경도로 클러스터 유사도 특성을 생성한다','remainder=default_num_pipeline이면 명시되지 않은 열은 모두 삭제된다'],
+ ans:3,
+ exp:'remainder=default_num_pipeline이면 명시되지 않은 열에 default_num_pipeline을 적용한다. 삭제되는 것이 아님. remainder="drop"이 삭제, remainder="passthrough"는 그대로 통과.'},
+
+{id:54, type:'obj', cat:'다항회귀',
+ q:'PolynomialFeatures(degree=2) + LinearRegression() 파이프라인은 어떤 회귀 모델인가?',
+ choices:['선형 회귀 (Linear Regression)','다항 회귀 (Polynomial Regression)','릿지 회귀 (Ridge Regression)','로지스틱 회귀 (Logistic Regression)'],
+ ans:1,
+ exp:'PolynomialFeatures(degree=2)로 x, x² 특성을 생성한 뒤 LinearRegression을 적용 = 2차 다항 회귀. 비선형 데이터에 각 특성의 거듭제곱을 새로운 특성으로 추가하고 선형 모델을 훈련시키는 것.'},
+
+// ── 단답형 ──
+{id:9, type:'sub', cat:'분류',
+ q:'다음 빈칸을 채우시오.\n\n정밀도(Precision) = TP / (TP + ___)\n재현율(Recall) = TP / (TP + ___)\nF1 점수 = 2 × (정밀도 × 재현율) / (정밀도 + ___)',
+ ans:'① FP  ② FN  ③ 재현율',
+ exp:'FP(거짓 양성, 1종 오류): 음성인데 양성으로 예측. FN(거짓 음성, 2종 오류): 양성인데 음성으로 예측. F1은 정밀도와 재현율의 조화 평균.'},
+
+{id:10, type:'sub', cat:'SVM',
+ q:'각 상황에서 gamma와 C를 어떻게 조절해야 하는지 쓰시오.\n\n(1) RBF 커널 SVM 모델이 과대적합인 경우:\n(2) RBF 커널 SVM 모델이 과소적합인 경우:',
+ ans:'(1) gamma 감소, C 감소\n(2) gamma 증가, C 증가',
+ exp:'C: 훈련 오차 허용 정도. gamma: 모델 복잡도. 둘 다 줄이면 경계 단순해져 과대적합 완화, 둘 다 늘리면 복잡해져 과소적합 완화.'},
+
+{id:11, type:'sub', cat:'소프트맥스',
+ q:'다음 수식의 이름과 각 기호의 의미를 쓰시오.\n\nJ(Θ) = −(1/m) Σᵢ₌₁ᵐ Σₖ₌₁ᴷ yₖ⁽ⁱ⁾ log(p̂ₖ⁽ⁱ⁾)',
+ ans:'이름: 크로스 엔트로피(Cross Entropy) 비용 함수\nm=훈련 샘플 수, K=클래스 수\nyₖ⁽ⁱ⁾=i번째 샘플이 클래스 k에 속하면 1, 아니면 0\np̂ₖ⁽ⁱ⁾=클래스 k에 속할 추정 확률',
+ exp:'소프트맥스 회귀의 비용 함수. 정답 클래스의 추정 확률이 1에 가까울수록 -log(p̂)가 0에 수렴.'},
+
+{id:12, type:'sub', cat:'선형회귀',
+ q:'다음 수식의 이름과 의미를 쓰시오.\n\nθ̂ = (XᵀX)⁻¹ Xᵀy',
+ ans:'이름: 정규 방정식(Normal Equation)\n의미: MSE 비용 함수를 최소화하는 θ값을 반복 없이 해석적으로(한 번에) 구하는 공식',
+ exp:'경사 하강법처럼 반복 학습 없이 바로 결과를 얻을 수 있다. 단, 특성 수(n)가 많으면 역행렬 계산이 느려진다.'},
+
+{id:13, type:'sub', cat:'경사하강법',
+ q:'경사 하강법 스텝 공식의 빈칸을 채우시오.\n\nθ(next) = θ − η × ___\n\nη는 (①)이라 하며, 너무 작으면 (②)이 오래 걸리고, 너무 크면 알고리즘이 (③)하여 최솟값을 찾지 못한다.',
+ ans:'빈칸: ∇θMSE(θ) (그레이디언트 벡터)\n① 학습률(learning rate)\n② 수렴\n③ 발산',
+ exp:'그레이디언트 벡터는 비용 함수가 가장 가파르게 증가하는 방향이므로, 반대 방향(-η×∇)으로 이동해 최솟값에 도달.'},
+
+{id:14, type:'sub', cat:'규제',
+ q:'빈칸을 채우시오.\n\n릿지 비용함수: J(θ) = MSE(θ) + α/m · Σθᵢ²\n라쏘 비용함수: J(θ) = MSE(θ) + 2α · Σ|θᵢ|\n\n릿지는 (①) 노름, 라쏘는 (②) 노름을 사용한다.\n라쏘는 일부 특성의 가중치를 정확히 (③)으로 만들어 자동으로 (④)을 수행한다.',
+ ans:'① L2  ② L1  ③ 0  ④ 특성 선택(Feature Selection)',
+ exp:'L1(라쏘): 각진 마름모 → 꼭짓점에서 축과 만남 → 가중치 0이 됨. L2(릿지): 원형 → 부드럽게 만남 → 가중치 0에 가깝지만 완전히 0이 안 됨.'},
+
+{id:15, type:'sub', cat:'전처리',
+ q:'SimpleImputer의 strategy 옵션 4가지를 모두 쓰시오.',
+ ans:'"median" — 중간값 (수치형 전용)\n"mean" — 평균값\n"most_frequent" — 최빈값 (범주형 가능)\n"constant" — fill_value로 지정한 상수',
+ exp:'누락값 처리 시 중간값(median)은 이상치에 덜 민감. 범주형에는 most_frequent 사용.'},
+
+{id:16, type:'sub', cat:'분류',
+ q:'빈칸을 채우시오.\n\nROC 곡선의 X축: (①)(FPR)\nROC 곡선의 Y축: (②)(TPR)\n완벽한 분류기의 AUC: (③)\n완전한 랜덤 분류기의 AUC: (④)',
+ ans:'① 거짓 양성 비율(Fall-out)  ② 진짜 양성 비율(재현율, 민감도)  ③ 1  ④ 0.5',
+ exp:'FPR = FP/(FP+TN) = 1-TNR(특이도). TPR = TP/(TP+FN) = 재현율 = 민감도. AUC가 1에 가까울수록 좋은 분류기.'},
+
+{id:34, type:'sub', cat:'분류',
+ q:'오차 행렬에서 각 이름을 쓰시오.\n예측:음성/예측:양성\n실제:음성 → [50] / [10]\n실제:양성 → [5] / [35]\n\n(1) TN 위치의 값: 50 → 이름\n(2) FP 위치의 값: 10 → 이름\n(3) FN 위치의 값: 5 → 이름\n(4) TP 위치의 값: 35 → 이름\n(5) 정밀도 계산\n(6) 재현율 계산',
+ ans:'(1) TN (진짜 음성)\n(2) FP (거짓 양성, 1종 오류)\n(3) FN (거짓 음성, 2종 오류)\n(4) TP (진짜 양성)\n(5) 정밀도 = 35/(10+35) ≈ 0.778 (77.8%)\n(6) 재현율 = 35/(5+35) = 0.875 (87.5%)',
+ exp:'오차 행렬: 행=실제, 열=예측. 정밀도=TP/(TP+FP), 재현율=TP/(TP+FN). 완벽한 분류기=주대각선만 0이 아닌 값.'},
+
+{id:35, type:'sub', cat:'사이킷런',
+ q:'사이킷런의 설계 철학 5가지를 쓰시오.',
+ ans:'① 일관성: 추정기·변환기·예측기 일관 인터페이스\n② 검사 기능: 하이퍼파라미터·학습 파라미터 직접 접근 가능\n③ 클래스 남용 방지: 데이터셋을 numpy 배열/scipy 희소 행렬로 표현\n④ 조합성: 기존 구성 요소 최대한 재사용\n⑤ 합리적인 기본값: 별도 설정 없이 바로 사용 가능',
+ exp:'추정기(Estimator): fit() / 변환기(Transformer): transform() / 예측기(Predictor): predict()'},
+
+{id:36, type:'sub', cat:'로지스틱회귀',
+ q:'로지스틱 함수(시그모이드) 공식과 특성을 쓰시오.\n\nσ(t) = ___\n출력 범위: (①)\nt → +∞: (②)\nt → −∞: (③)\nt = 0: (④)',
+ ans:'σ(t) = 1 / (1 + exp(−t))\n① 0~1  ② 1  ③ 0  ④ 0.5',
+ exp:'시그모이드 함수는 S자 형태로, 임의의 실수를 0~1 사이의 확률로 변환. p̂ ≥ 0.5 → 양성(1), p̂ < 0.5 → 음성(0).'},
+
+{id:37, type:'sub', cat:'학습곡선',
+ q:'일반화 오차의 세 가지 구성 요소를 쓰고 설명하시오.\n\n(①): 잘못된 가정으로 인한 오차 → (②) 되기 쉬움\n(③): 훈련 데이터 작은 변동에 과도하게 민감 → (④) 되기 쉬움\n(⑤): 데이터 자체의 잡음, 줄이기 불가',
+ ans:'① 편향(Bias)  ② 과소적합\n③ 분산(Variance)  ④ 과대적합\n⑤ 줄일 수 없는 오차(Irreducible Error)',
+ exp:'모델 복잡도 ↑ → 분산 ↑, 편향 ↓ (과대적합). 모델 복잡도 ↓ → 분산 ↓, 편향 ↑ (과소적합).'},
+
+{id:47, type:'sub', cat:'전처리',
+ q:'OrdinalEncoder 사용 시 발생할 수 있는 문제점을 설명하시오.\n(ocean_proximity: <1H OCEAN=0, INLAND=1, ISLAND=2, NEAR BAY=3, NEAR OCEAN=4)',
+ ans:'OrdinalEncoder는 카테고리에 순서(대소 관계)를 부여한다. ocean_proximity는 순서가 없는 범주형 특성인데, 숫자로 인코딩하면 ML 알고리즘이 NEAR OCEAN(4)이 <1H OCEAN(0)보다 4배 크다고 잘못 인식할 수 있다.',
+ exp:'해결책: OneHotEncoder 사용 → 각 카테고리를 독립적인 이진 열로 표현해 순서 없음을 명시.'},
+
+{id:48, type:'sub', cat:'전처리',
+ q:'min-max 스케일링과 표준화의 차이를 설명하시오. (공식, 출력 범위, 이상치 민감성 포함)',
+ ans:'min-max: (x-min)/(max-min), 출력 0~1, 이상치에 민감\n표준화: (x-μ)/σ, 출력 제한 없음(평균0 분산1), 이상치에 덜 민감, 더 널리 사용됨',
+ exp:'신경망처럼 0~1 범위를 선호하는 경우엔 min-max. 대부분의 ML 알고리즘에선 표준화가 더 안정적.'},
+
+{id:49, type:'sub', cat:'분류',
+ q:'정밀도/재현율 곡선에서 임곗값이 높아질수록 재현율은 단조 감소하는 반면, 정밀도는 왜 울퉁불퉁하게 나타나는가?',
+ ans:'재현율은 임곗값 ↑ → TP가 줄고 FN이 늘어 반드시 단조 감소.\n정밀도는 제거되는 샘플이 TP이면 하락, FP이면 상승 → 어떤 샘플이 제거되느냐에 따라 오르내리므로 울퉁불퉁.',
+ exp:'임곗값 ↑ → 양성 예측 수 ↓ → 재현율은 반드시 ↓(단조). 정밀도는 제거되는 샘플의 실제 레이블에 따라 비단조(울퉁불퉁).'},
+
+{id:50, type:'sub', cat:'경사하강법',
+ q:'다음 MSE 그레이디언트 수식에서 각 기호의 의미를 설명하시오.\n\n∂/∂θⱼ MSE(θ) = (2/m) Σᵢ₌₁ᵐ (θᵀx⁽ⁱ⁾ − y⁽ⁱ⁾) xⱼ⁽ⁱ⁾',
+ ans:'∂/∂θⱼ: j번째 파라미터에 대한 편미분\nm: 훈련 샘플 수\nθᵀx⁽ⁱ⁾: i번째 샘플의 예측값\ny⁽ⁱ⁾: i번째 실제 타깃값\n(θᵀx⁽ⁱ⁾ − y⁽ⁱ⁾): 예측 오차\nxⱼ⁽ⁱ⁾: i번째 샘플의 j번째 특성값',
+ exp:'전체 훈련 샘플의 (예측 오차 × j번째 특성)의 평균 × 2. 그레이디언트 벡터: ∇θMSE(θ) = (2/m)Xᵀ(Xθ−y).'},
+
+{id:52, type:'sub', cat:'분류',
+ q:'classification_report()에서 다음 항목의 의미를 설명하시오.\n\nmacro avg, weighted avg, support',
+ ans:'support: 각 클래스에 속하는 실제 샘플 수\nmacro avg: 각 클래스 지표의 단순 평균 (클래스 불균형 고려 X)\nweighted avg: 각 클래스 샘플 수(support)를 가중치로 한 평균 (클래스 불균형 반영)',
+ exp:'클래스 불균형이 심할 때는 accuracy나 macro avg보다 weighted avg나 개별 클래스 지표를 보는 것이 더 적절.'},
+
+{id:28, type:'sub', cat:'종합',
+ q:'다음 용어를 쓰시오.\n(1) 테스트 세트로 오차 추정 시 낙관적 추정이 되는 현상\n(2) 실제 특성 추가 없이 고차원 특성 추가 효과를 얻는 기법\n(3) 검증 오차 최솟값에서 훈련을 중단하는 기법\n(4) SVM 결정 경계를 결정하는 도로 경계 샘플\n(5) 릿지와 라쏘를 절충한 규제 모델',
+ ans:'(1) 데이터 스누핑 편향(Data Snooping Bias)\n(2) 커널 트릭(Kernel Trick)\n(3) 조기 종료(Early Stopping)\n(4) 서포트 벡터(Support Vector)\n(5) 엘라스틱넷(ElasticNet)',
+ exp:'(1) 작년 기출 1번. (5) r=0이면 릿지, r=1이면 라쏘와 동일.'},
+
+{id:45, type:'sub', cat:'종합',
+ q:'각 상황에서 어떤 방법을 선택해야 하는지 쓰시오.\n\n(1) 특성 수(n)가 매우 많을 때 선형 회귀 훈련 방법\n(2) 불필요한 특성 가중치를 자동으로 0으로 만드는 규제 방법\n(3) 다중 분류에서 SVM처럼 훈련 세트 크기에 민감한 알고리즘에 선호되는 전략\n(4) 클래스가 둘 이상일 때 LogisticRegression이 자동으로 사용하는 방식',
+ ans:'(1) 경사 하강법(SGD 또는 미니배치 GD)\n(2) 라쏘 회귀(Lasso, L1 규제)\n(3) OvO(One vs One) 전략\n(4) 소프트맥스 회귀(Softmax Regression)',
+ exp:'n 많음 → 경사 하강법 / 특성 선택 필요 → 라쏘 / 커널 트릭 → SVC만(LinearSVC 불가)'},
+
+{id:43, type:'sub', cat:'사이킷런',
+ q:'다음 설명에 해당하는 사이킷런 클래스/함수명을 쓰시오.\n(1) 누락된 값을 중간값·평균·최빈값 등으로 채우는 클래스\n(2) 텍스트 카테고리를 정수로 인코딩(순서 부여)\n(3) 각 카테고리를 이진 벡터로 인코딩(희소 행렬 출력)\n(4) 여러 변환기를 순서대로 연결\n(5) 각 열에 다른 변환기를 적용\n(6) 각 폴드의 예측값을 반환하는 교차 검증 함수',
+ ans:'(1) SimpleImputer\n(2) OrdinalEncoder\n(3) OneHotEncoder\n(4) Pipeline / make_pipeline\n(5) ColumnTransformer\n(6) cross_val_predict()',
+ exp:'헷갈리는 쌍: OrdinalEncoder(순서O) vs OneHotEncoder(순서X) / Pipeline(순서대로) vs ColumnTransformer(열마다 다른 변환)'},
+
+// ── 코드 ──
+{id:17, type:'code', cat:'규제',
+ q:'SGDRegressor로 라쏘/릿지 회귀를 수행하려 한다. 빈칸에 알맞은 값을 쓰시오.\n\nsgd_reg = SGDRegressor(penalty=①, ...)  # 라쏘 회귀\nsgd_reg2 = SGDRegressor(penalty=②, ...)  # 릿지 회귀',
+ ans:'① "l1"  ② "l2"',
+ exp:'SGDRegressor penalty: "l1"=라쏘, "l2"=릿지, None=규제 없음. 작년 기출 12번 문제!'},
+
+{id:18, type:'code', cat:'전처리',
+ q:'계층적 샘플링 코드의 빈칸을 채우시오.\n\ntrain_test_split(\n    housing,\n    test_size=0.2,\n    ①=housing["income_cat"],\n    random_state=42\n)',
+ ans:'① stratify',
+ exp:'stratify 매개변수에 기준 열을 지정하면 해당 열의 비율을 유지하며 샘플링. 작년 기출 2번!'},
+
+{id:19, type:'code', cat:'조기종료',
+ q:'조기 종료 코드의 빈칸을 채우시오.\n\nbest_valid_rmse = float("inf")\nfor epoch in range(n_epochs):\n    ...\n    val_error = mean_squared_error(...)\n    if ①:\n        best_valid_rmse = val_error\n        best_model = deepcopy(sgd_reg)',
+ ans:'① val_error < best_valid_rmse',
+ exp:'검증 오차가 지금까지의 최솟값보다 작을 때만 최상 모델을 갱신. 조건이 만족되지 않으면 이전 best_model 유지. 작년 기출 15번!'},
+
+{id:20, type:'code', cat:'SVM',
+ q:'다음 코드에서 잘못된 부분을 찾고 이유를 설명하시오.\n\ny_pred = lin_clf.predict_proba(X_test)\n(lin_clf는 LinearSVC 모델)',
+ ans:'"predict_proba()" → "predict()"\nLinearSVC에는 predict_proba() 메서드가 없다.',
+ exp:'SVM은 확률을 추정하는 방식이 아니라 결정 함수 점수(양수/음수)로 클래스를 결정. 확률이 필요하면 SVC(probability=True) 사용.'},
+
+{id:21, type:'code', cat:'소프트맥스',
+ q:'소프트맥스 회귀 직접 구현 코드의 빈칸을 채우시오.\n\ndef softmax(logits):\n    exps = np.exp(logits)\n    exp_sums = exps.sum(axis=①, keepdims=True)\n    return exps / exp_sums\n\nerror = ②\ngradients = 1/m * X_train.T @ error',
+ ans:'① 1  ② Y_proba - Y_train_one_hot',
+ exp:'① softmax에서 각 샘플(행)에 대해 클래스별 확률의 합으로 나눠야 하므로 axis=1\n② 그레이디언트 = (1/m) × Xᵀ(p̂ - y)'},
+
+{id:22, type:'code', cat:'소프트맥스',
+ q:'소프트맥스 회귀 L2 규제 코드의 빈칸을 채우시오.\n\nC = 100\ngradients = 1/m * X_train.T @ error\ngradients += np.r_[\n    np.zeros([①, n_outputs]),\n    ② * Theta[1:]\n]',
+ ans:'① 1  ② 1 / C',
+ exp:'① 첫 번째 행(편향 θ₀)은 규제하지 않으므로 zeros([1, n_outputs])로 0 삽입\n② 나머지 가중치에 1/C × Theta[1:]을 더해 L2 규제 적용.'},
+
+{id:24, type:'code', cat:'SVM',
+ q:'다음 SVM 코드에서 잘못된 부분 2곳을 찾고 수정하시오.\n\n(A) svm_clf = make_pipeline(SVC())\n(B) print(rnd_search.score(X_train, y_train))  # 최종 평가',
+ ans:'(A): make_pipeline(StandardScaler(), SVC()) — StandardScaler 누락\n(B): rnd_search.score(X_test, y_test) — 최종 평가는 반드시 테스트 세트로',
+ exp:'(A) SVM은 스케일에 민감 → StandardScaler 없으면 수렴 실패 가능\n(B) 테스트 세트는 최종 평가 단 한 번만. 훈련 세트로 평가하면 과대적합 감지 불가.'},
+
+{id:38, type:'code', cat:'SVM',
+ q:'비선형 SVM 분류기 코드의 빈칸을 채우시오.\n\n# 3차 다항식 커널\nSVC(kernel=①, degree=3, coef0=1, C=5)\n\n# RBF 커널\nSVC(kernel=②, gamma=5, C=0.001)\n\n# 클래스 예측\npoly_svm.③([X_new])',
+ ans:'① "poly"  ② "rbf"  ③ predict',
+ exp:'SVM 커널 종류: "linear", "poly", "rbf", "sigmoid". SVM은 predict_proba() 없음 → predict()로 클래스 예측.'},
+
+{id:39, type:'code', cat:'전처리',
+ q:'다음 코드에서 잘못된 부분을 찾고 이유를 설명하시오.\n\nimputer.fit(housing_num)  # 훈련 세트로 fit\nX_valid_prep = imputer.fit_transform(X_valid_num)  # ← 문제\nX_test_prep = imputer.fit_transform(X_test_num)  # ← 문제',
+ ans:'"fit_transform()" → "transform()"\n검증·테스트 세트에는 훈련 세트로 학습된 통계값을 그대로 적용해야 한다.',
+ exp:'fit_transform()은 새로 fit(학습)하고 변환하므로 검증/테스트 세트의 통계를 기반으로 변환 → 데이터 누수(leakage). 검증·테스트에는 반드시 transform()만 사용.'},
+
+{id:41, type:'code', cat:'모델튜닝',
+ q:'GridSearchCV 코드의 빈칸을 채우시오.\n\nparam_grid = [\n    {"n_clusters":[5,8,10], "max_features":[4,6,8]},  # 조합: ①개\n    {"n_clusters":[10,15], "max_features":[6,8,10]},   # 조합: ②개\n]\n# 총 조합: ③개, cv=3이면 총 훈련 횟수: ④번\n\ngrid_search.④',
+ ans:'① 9개(3×3)  ② 6개(2×3)  ③ 15개(9+6)  ④ 45번(15×3)  ⑤ best_params_',
+ exp:'GridSearchCV는 각 딕셔너리의 모든 조합을 탐색. 최적 파라미터는 best_params_, 최적 모델은 best_estimator_.'},
+
+{id:44, type:'code', cat:'경사하강법',
+ q:'확률적 경사 하강법(SGD) 코드의 빈칸을 채우시오.\n\n# SGD 그레이디언트 (배치 GD와 다름!)\ngradients = ① * xi.T @ (xi @ theta - yi)\ntheta = theta - ② * gradients\n\n배치 GD와의 핵심 차이: ③',
+ ans:'① 2  ② eta  ③ SGD는 샘플 1개씩 사용, m으로 나누지 않음 / 배치 GD는 전체 m개, 2/m 곱함',
+ exp:'배치 GD: 2/m * X_b.T @ (X_b @ theta - y) — 전체 샘플 사용\nSGD: 2 * xi.T @ (xi @ theta - yi) — 샘플 1개, m으로 나누지 않음'},
+
+{id:46, type:'code', cat:'전처리',
+ q:'다음 코드가 하는 역할을 설명하시오.\n\nhousing.drop("total_bedrooms", axis=1, inplace=True)',
+ ans:'housing 데이터프레임에서 "total_bedrooms" 열(column)을 삭제한다. inplace=True이므로 원본을 직접 수정한다.',
+ exp:'axis=1: 열(column) 방향 삭제 / axis=0이면 행 삭제\ninplace=True: 원본 DataFrame 직접 수정, 반환값 없음'},
+
+{id:53, type:'code', cat:'분류',
+ q:'StratifiedKFold 직접 구현 코드의 빈칸을 채우시오.\n\nfor train_index, test_index in skfolds.split(X_train, y_train_5):\n    clone_clf = clone(①)\n    ...\n    n_correct = sum(y_pred == y_test_fold)\n    print(n_correct / ②)',
+ ans:'① sgd_clf  ② len(y_pred)',
+ exp:'clone(): 분류기를 복제해 각 폴드마다 새로 훈련 (기존 학습 상태 초기화). StratifiedKFold: 각 폴드에서 클래스 비율 유지.'},
+
+{id:55, type:'code', cat:'모델튜닝',
+ q:'RandomForest 특성 중요도 확인 코드의 빈칸을 채우시오.\n\nfinal_model = rnd_search.①\nfeature_importances = final_model.named_steps["random_forest"].②\nsorted(zip(feature_importances, ...), reverse=③)',
+ ans:'① best_estimator_  ② feature_importances_  ③ True',
+ exp:'best_estimator_: 교차검증에서 가장 좋은 성능을 보인 파이프라인(전처리 포함)\nfeature_importances_: 각 특성의 상대적 중요도\nreverse=True: 내림차순 정렬'},
+
+{id:56, type:'code', cat:'분류',
+ q:'오차 행렬 오류만 강조, 열 단위 정규화 코드의 빈칸을 채우시오.\n\nsample_weight = (y_train_pred ① y_train)\nConfusionMatrixDisplay.from_predictions(\n    y_train, y_train_pred,\n    sample_weight=sample_weight,\n    normalize=②,\n)',
+ ans:'① !=  ② "pred"',
+ exp:'"y_train_pred != y_train": 틀린 예측만 True(1)\nnormalize 옵션: "true"=행 단위, "pred"=열 단위, "all"=전체'},
+
+{id:57, type:'code', cat:'분류',
+ q:'decision_function 관련 코드의 빈칸을 채우시오.\n\nthreshold = 0\ny_pred = (y_scores ① threshold)  # 기본 예측\n\nthreshold_high = 8000\ny_pred_strict = (y_scores ② threshold_high)  # 엄격한 예측',
+ ans:'① >  ② >',
+ exp:'SGDClassifier 기본 임곗값 = 0 → predict()는 (decision_function() > 0)과 동일\n임곗값 ↑ → 더 확실한 양성만 양성 예측 → 정밀도 ↑, 재현율 ↓'},
+
+{id:58, type:'code', cat:'분류',
+ q:'정밀도 90% 이상이 되는 가장 낮은 임곗값을 찾는 코드의 빈칸을 채우시오.\n\nprecisions, recalls, thresholds = precision_recall_curve(y_train_5, y_scores)\nidx = (precisions ①).argmax()\nthreshold_90 = thresholds[idx]\ny_pred_90 = (y_scores ② threshold_90)',
+ ans:'① >= 0.90  ② >=',
+ exp:'(precisions >= 0.90).argmax(): 정밀도가 처음으로 90% 이상이 되는 인덱스\n이후 해당 임곗값 이상인 샘플만 양성으로 예측 → 정밀도 ≥ 90% 보장'},
+
+{id:60, type:'code', cat:'분류',
+ q:'다음 코드에서 잘못된 부분 3곳을 모두 찾고 수정하시오.\n\n(A) y_train_5 = (y_train == 5)  # MNIST y는 문자열!\n(B) y_train_pred = cross_val_score(sgd_clf, X_train, y_train_5, cv=3)  # 오차행렬에 필요한 것?\n(C) score = f1_score(y_train_5, y_train_pred, average="macro")  # 이진분류인데?',
+ ans:'(A) y_train == 5 → y_train == "5" (MNIST y는 문자열 타입)\n(B) cross_val_score → cross_val_predict (오차 행렬에는 예측값 필요)\n(C) average="macro" → average="binary" (이진 분류)',
+ exp:'(A) MNIST y 타입: 문자열 — fetch_openml() 기본 반환\n(B) 오차 행렬 = 예측값 필요 → cross_val_predict\n(C) 이진 분류 F1: average 생략 or "binary"'},
+
+// ── 추가 문제: 빠진 중요 포인트 ──
+
+{id:61, type:'sub', cat:'SVM',
+ q:'하드 마진 분류(Hard Margin)의 두 가지 문제점을 쓰시오.',
+ ans:'① 데이터가 선형적으로 구분될 수 있어야만 제대로 작동한다\n② 이상치에 매우 민감하다 — 이상치 하나로 결정 경계가 크게 변하거나 분류 불가능해짐',
+ exp:'해결책: 소프트 마진 분류(C 하이퍼파라미터로 마진 오류 허용). 이상치에 유연하게 대처하면서도 최대 마진을 유지하는 균형을 찾는다.'},
+
+{id:62, type:'sub', cat:'SVM',
+ q:'SVM 이론에서 다음을 설명하시오.\n\n(1) 가중치 벡터 w와 마진 폭의 관계\n(2) 슬랙 변수 ζ⁽ⁱ⁾(zeta)의 의미\n(3) 소프트 마진 목적함수에서 C가 커지면 어떻게 되는가?',
+ ans:'(1) 가중치 벡터 w가 작을수록 마진이 커진다 (기울기 반 줄면 마진 2배)\n(2) i번째 샘플이 얼마나 마진 오류를 발생시킬지 허용하는 변수 (ζ≥0)\n(3) C가 커지면 슬랙변수가 커질 수 없어 오차를 허용하지 않음 → 과대적합 위험',
+ exp:'목적함수: minimize (1/2)wᵀw + C×Σζ⁽ⁱ⁾\nC 작음: 슬랙변수 허용 → 마진 넓고 일반화 좋음\nC 큼: 슬랙변수 억제 → 마진 좁고 샘플 하나하나에 맞춤 → 과대적합'},
+
+{id:63, type:'sub', cat:'SVM',
+ q:'RBF 커널에서 gamma 값에 따른 종 모양(가우스 함수)의 변화와 결정 경계의 관계를 설명하시오.',
+ ans:'gamma 클수록: 종 모양이 좁아짐 → 각 샘플의 영향 범위가 국소적 → 경계가 복잡하고 구불구불함 → 과대적합 위험\ngamma 작을수록: 종 모양이 넓게 퍼짐 → 각 샘플의 영향 범위가 넓음 → 경계가 단순하고 완만함 → 과소적합 위험',
+ exp:'교수님 강조: gamma가 클수록 훈련 데이터 하나하나에 타이트하게 맞는 복잡한 경계가 생김. C와 비슷한 효과지만 역할이 다름 — C는 훈련 오차, gamma는 모델 복잡도.'},
+
+{id:64, type:'obj', cat:'규제',
+ q:'다음 중 엘라스틱넷(ElasticNet)에 대한 설명으로 옳은 것은?',
+ choices:['릿지와 라쏘를 절충한 모델로, 혼합 비율 r=0이면 라쏘, r=1이면 릿지와 같다','l1_ratio=0.5이면 L1과 L2 규제를 동일하게 혼합한다','엘라스틱넷은 특성 선택 기능이 없다','엘라스틱넷의 비용함수에는 MSE가 포함되지 않는다'],
+ ans:1,
+ exp:'엘라스틱넷: r=0이면 릿지, r=1이면 라쏘. l1_ratio=r. ElasticNet(alpha=0.1, l1_ratio=0.5)이면 L1과 L2 규제를 절반씩 혼합. 특성이 많고 일부만 유용할 것으로 의심될 때 유용.'},
+
+{id:65, type:'code', cat:'규제',
+ q:'엘라스틱넷 코드의 빈칸을 채우시오.\n\nelastic_net = ElasticNet(alpha=0.1, ①=0.5)\nelastic_net.fit(X, y)\n\n# r=0이면 ②와 같고\n# r=1이면 ③와 같다',
+ ans:'① l1_ratio  ② 릿지(Ridge)  ③ 라쏘(Lasso)',
+ exp:'l1_ratio가 혼합 비율 r에 해당. l1_ratio=0이면 L2만 = 릿지, l1_ratio=1이면 L1만 = 라쏘.'},
+
+{id:66, type:'code', cat:'전처리',
+ q:'소프트맥스 회귀 직접 구현에서 편향 항을 추가하는 코드의 빈칸을 채우시오.\n\n# 방법 1: numpy로 직접\nX_with_bias = np.①_([np.ones(len(X)), X])\n\n# 방법 2: 사이킷런\nfrom sklearn.preprocessing import ②\nX_b = ②(X)',
+ ans:'① c_ (np.c_)  ② add_dummy_feature',
+ exp:'np.c_[np.ones(len(X)), X]: 1로 이루어진 열을 X 앞에 붙임 → x₀=1 편향 항 추가\nadd_dummy_feature(X): 사이킷런 함수로 동일한 역할. 정규 방정식 구현 시 필수.'},
+
+{id:67, type:'sub', cat:'분류',
+ q:'다음을 설명하시오.\n\n(1) DummyClassifier를 사용하는 이유\n(2) MNIST 5-감지기에서 DummyClassifier의 정확도가 약 90%인 이유\n(3) 이를 통해 알 수 있는 정확도(accuracy)의 한계',
+ ans:'(1) 모든 샘플을 가장 많이 등장하는 클래스로 분류하는 기준선(baseline) 모델로, 실제 모델과 비교하기 위해 사용\n(2) MNIST에서 5는 전체의 약 10%뿐이므로 "항상 5가 아님"으로 분류해도 90% 정확도 달성\n(3) 클래스 불균형이 있을 때 정확도는 좋은 성능 지표가 아님 → 정밀도/재현율/F1 사용 권장',
+ exp:'작년 기출 연계 포인트. 분류기 평가에서 정확도만으로는 불충분한 이유를 DummyClassifier로 직접 보여준다.'},
+
+{id:68, type:'code', cat:'파이프라인',
+ q:'make_column_selector를 사용한 ColumnTransformer 코드의 빈칸을 채우시오.\n\npreprocessing = make_column_transformer(\n    (num_pipeline, make_column_selector(①=np.number)),\n    (cat_pipeline, make_column_selector(①=object)),\n)',
+ ans:'① dtype_include',
+ exp:'make_column_selector(dtype_include=np.number): 수치형 열 자동 선택\nmake_column_selector(dtype_include=object): 범주형(문자열) 열 자동 선택\n열 이름을 직접 지정하지 않아도 타입 기반으로 자동 분류.'},
+
+{id:69, type:'sub', cat:'파이프라인',
+ q:'사이킷런 파이프라인에서 다음 두 방법의 차이를 설명하시오.\n\n(1) Pipeline([("imputer", SimpleImputer()), ("scaler", StandardScaler())])\n(2) make_pipeline(SimpleImputer(), StandardScaler())',
+ ans:'두 방법 모두 동일한 파이프라인을 생성한다.\n차이: Pipeline은 각 단계의 이름을 직접 지정, make_pipeline은 클래스 이름을 소문자로 변환하여 자동으로 이름 지정\n예: make_pipeline에서 SimpleImputer → "simpleimputer"로 자동 명명',
+ exp:'하이퍼파라미터 접근 시 이름 필요: Pipeline은 지정한 이름 사용, make_pipeline은 자동 생성된 이름 사용. GridSearchCV에서 파라미터 접근 시 "단계명__파라미터명" 형식 사용.'},
+
+{id:70, type:'obj', cat:'앙상블',
+ q:'다음 중 RandomForestRegressor에 대한 설명으로 옳은 것은?',
+ choices:['단일 결정 트리보다 항상 느리고 성능도 낮다','특성을 랜덤으로 선택해 많은 결정 트리를 생성하고 예측의 평균을 구하는 앙상블 모델이다','RandomForest는 과대적합이 절대 발생하지 않는다','feature_importances_는 각 샘플의 중요도를 나타낸다'],
+ ans:1,
+ exp:'RandomForestRegressor: 특성을 랜덤으로 선택해 많은 결정 트리 생성 → 예측의 평균을 구함. 앙상블(ensemble) = 서로 다른 모델들로 구성된 모델. 기반 모델(결정 트리)의 성능을 높임. feature_importances_는 각 특성의 상대적 중요도를 나타냄.'},
+
+{id:71, type:'sub', cat:'전처리',
+ q:'ClusterSimilarity의 fit()에서 sample_weight=housing_labels를 사용하는 이유를 설명하시오.',
+ ans:'housing_labels(주택 가격)를 가중치로 사용하면 고가 지역에 더 많은 가중치를 부여하여 K-평균 클러스터 중심이 가격이 높은 중요한 지역에 집중된다. 이렇게 하면 주택 가격 예측에 더 유용한 클러스터 특성이 생성된다.',
+ exp:'K-평균(KMeans)의 fit() 메서드는 선택적 매개변수 sample_weight를 제공. 결과를 동일하게 재현하려면 random_state도 지정해야 함.'},
+
+{id:72, type:'code', cat:'선형회귀',
+ q:'LinearRegression의 결과를 확인하는 코드의 빈칸을 채우시오.\n\nlin_reg = LinearRegression()\nlin_reg.fit(X, y)\n\n# 편향(θ₀)\nprint(lin_reg.①)\n\n# 특성 가중치(θ₁~θₙ)\nprint(lin_reg.②)',
+ ans:'① intercept_  ② coef_',
+ exp:'사이킷런은 특성의 가중치(coef_)와 편향(intercept_)을 분리하여 저장. 정규 방정식 결과와 동일한 값이 나온다.'},
+
+{id:73, type:'obj', cat:'경사하강법',
+ q:'다음 중 확률적 경사 하강법(SGD)의 학습 스케줄에 대한 설명으로 옳은 것은?',
+ choices:['학습률을 처음부터 끝까지 동일하게 유지한다','매 반복에서 학습률을 결정하는 함수로, 처음엔 크게 점차 줄여 수렴을 돕는다','학습 스케줄은 SGDRegressor에서 사용할 수 없다','학습률이 줄어들면 오히려 수렴 속도가 빨라진다'],
+ ans:1,
+ exp:'학습 스케줄(learning schedule): 매 반복에서 학습률을 결정하는 함수. 처음엔 큰 학습률로 빠르게 이동 → 점차 줄여 최솟값 근처에서 진동 줄임. SGDRegressor에서는 eta0, learning_rate 파라미터로 설정.'},
+
+{id:74, type:'sub', cat:'경사하강법',
+ q:'다음 세 가지 경사 하강법을 비교하여 각각의 특징을 쓰시오.\n\n(1) 배치 경사 하강법\n(2) 확률적 경사 하강법(SGD)\n(3) 미니 배치 경사 하강법',
+ ans:'(1) 배치 GD: 매 스텝 전체 훈련 세트 사용 → 안정적이지만 느림, 외부 메모리 학습 불가\n(2) 확률적 GD: 매 스텝 샘플 1개 사용 → 빠르고 외부 메모리 학습 가능, 불안정(진동)\n(3) 미니배치 GD: 작은 샘플 세트 사용 → GPU 활용 가능, 확률적보다 안정적',
+ exp:'알고리즘 비교표(표 4-1) 핵심: 정규방정식/SVD는 m(샘플)에 강하고 n(특성)에 약함. 경사하강법 계열은 모두 스케일 조정 필요.'},
+
+{id:75, type:'code', cat:'선형회귀',
+ q:'다음은 타깃 스케일링에 관한 코드이다. 빈칸을 채우시오.\n\n# 방법 1: 직접 스케일\ntarget_scaler = StandardScaler()\nscaled_labels = target_scaler.fit_transform(housing_labels.to_frame())\nmodel.fit(housing[["median_income"]], scaled_labels)\npredictions = target_scaler.①(model.predict(some_new_data))\n\n# 방법 2: 더 편리한 방법\nfrom sklearn.compose import ②\nmodel = ②(LinearRegression(), transformer=StandardScaler())',
+ ans:'① inverse_transform  ② TransformedTargetRegressor',
+ exp:'inverse_transform(): 스케일된 예측값을 원래 스케일로 역변환.\nTransformedTargetRegressor: 타깃 변환을 자동으로 처리 — fit 시 타깃 스케일, predict 시 자동 역변환. 훨씬 편리.'},
+
+{id:76, type:'obj', cat:'분류',
+ q:'다음 중 SGDClassifier에서 predict_proba() 대신 사용 가능한 방법은?',
+ choices:['LinearSVC(probability=True)로 변경한다','SVC(probability=True)를 사용하면 추가 모델 훈련으로 확률 추정이 가능하다','SGDClassifier는 확률 추정이 절대 불가능하다','decision_function()이 확률을 직접 반환한다'],
+ ans:1,
+ exp:'LinearSVC와 SGDClassifier에는 predict_proba()가 없다. SVC(probability=True)를 사용하면 훈련 끝날 때 SVM 결정함수 점수를 확률로 매핑하는 추가 모델을 훈련시킨다. decision_function()은 확률이 아닌 결정 경계로부터의 거리(점수)를 반환.'},
+
+{id:77, type:'sub', cat:'분류',
+ q:'다음 빈칸을 채우시오.\n\n다중 레이블 분류에서 ClassifierChain을 사용하는 이유:\n레이블당 하나의 모델을 학습하면 (①) 포착이 어렵기 때문.\nClassifierChain은 앞 모델의 (②)을 다음 모델의 입력으로 사용하며,\n훈련 시에는 진짜 (③)를 사용한다.',
+ ans:'① 레이블 간 의존성  ② 예측(결과)  ③ 레이블(타깃)',
+ exp:'예: "큰 숫자(7,8,9)인지"와 "홀수인지" 두 레이블이 서로 연관될 수 있음. ClassifierChain은 이 의존성을 모델링. KNeighborsClassifier는 기본적으로 다중 레이블 지원.'},
+
+{id:78, type:'code', cat:'분류',
+ q:'다중 레이블 분류 코드의 빈칸을 채우시오.\n\n# 두 개의 레이블 생성\ny_train_large = (y_train >= "7")   # 7,8,9이면 True\ny_train_odd = (y_train.astype("int8") % 2 == 1)\ny_multilabel = np.①_[y_train_large, y_train_odd]\n\nknn_clf = KNeighborsClassifier()\nknn_clf.fit(X_train, y_multilabel)\n\n# F1 점수 (레이블 가중치 동일)\nf1_score(y_multilabel, y_pred, average="②")\n\n# 샘플 수 가중치 반영\nf1_score(y_multilabel, y_pred, average="③")',
+ ans:'① c_ (np.c_)  ② "macro"  ③ "weighted"',
+ exp:'np.c_: 두 배열을 열로 합치기. average="macro": 레이블별 F1 단순 평균. average="weighted": 레이블별 샘플 수를 가중치로 한 평균.'},
+
+{id:79, type:'sub', cat:'선형회귀',
+ q:'선형 회귀에서 사이킷런 LinearRegression 클래스가 정규 방정식 대신 SVD를 사용하는 이유 2가지를 쓰시오.',
+ ans:'① 정규 방정식보다 더 효율적이다 (SVD: O(n²), 정규방정식: O(n²·⁴)~O(n³))\n② XᵀX의 역행렬이 없는 경우에도 유사역행렬(pseudoinverse)은 항상 구할 수 있다',
+ exp:'SVD: 훈련 세트 행렬 X를 UΣVᵀ로 분해. 유사역행렬 X⁺ = VΣ⁺Uᵀ. np.linalg.lstsq()나 np.linalg.pinv()로 직접 계산 가능.'},
+
+{id:80, type:'obj', cat:'전처리',
+ q:'다음 중 ColumnTransformer의 remainder 파라미터에 대한 설명으로 옳은 것은?',
+ choices:['remainder="drop"이면 명시되지 않은 열에 기본 변환이 적용된다','remainder="passthrough"이면 명시되지 않은 열을 변환 없이 그대로 통과시킨다','remainder는 항상 문자열만 받는다','remainder를 생략하면 자동으로 모든 열을 처리한다'],
+ ans:1,
+ exp:'remainder 옵션:\n"drop"(기본): 나머지 열 삭제\n"passthrough": 변환 없이 그대로 출력\n변환기 객체: 해당 변환기를 나머지 열에 적용 (예: remainder=default_num_pipeline)'},
+
+{id:81, type:'code', cat:'모델튜닝',
+ q:'RandomizedSearchCV 코드의 빈칸을 채우시오.\n\nfrom sklearn.model_selection import ①\nfrom scipy.stats import ②, uniform\n\nparam_distribs = {\n    "preprocessing__geo__n_clusters": ②(low=3, high=50),\n    "random_forest__max_features": ②(low=2, high=20)\n}\n\nrnd_search = ①(full_pipeline, param_distribs,\n    n_iter=10, cv=3,\n    scoring="neg_root_mean_squared_error",\n    random_state=42)',
+ ans:'① RandomizedSearchCV  ② randint',
+ exp:'randint(low, high): 정수형 이산 균등 분포에서 샘플링. uniform(loc, scale): 연속형 균등 분포. loguniform: 로그 스케일 균등 분포 (SVC gamma, C 탐색에 유용).'},
+
+{id:82, type:'sub', cat:'분류',
+ q:'다음 각 용어를 설명하시오.\n\n(1) 민감도(Sensitivity)\n(2) 특이도(Specificity, TNR)\n(3) 폴-아웃(Fall-out, FPR)\n(4) 위 세 가지와 ROC 곡선의 관계',
+ ans:'(1) 민감도 = 재현율 = TPR = TP/(TP+FN): 실제 양성 중 양성으로 맞게 예측한 비율\n(2) 특이도 = TNR = TN/(TN+FP): 실제 음성 중 음성으로 맞게 예측한 비율\n(3) 폴-아웃 = FPR = 1-TNR = FP/(FP+TN): 음성인데 양성으로 잘못 예측한 비율\n(4) ROC 곡선 = X축: FPR(폴-아웃), Y축: TPR(민감도=재현율)',
+ exp:'ROC 곡선은 민감도(재현율)에 대한 1-특이도 그래프. 임곗값이 낮아질수록 TPR↑, FPR↑ 방향으로 이동.'},
+
+{id:83, type:'code', cat:'분류',
+ q:'다음 SGDRegressor 코드에서 빈칸을 채우시오.\n\nsgd_reg = SGDRegressor(\n    max_iter=1000,\n    tol=①,       # 수렴 판단 허용 오차\n    penalty=None,\n    eta0=0.01,\n    n_iter_no_change=②,  # 100번 동안 개선 없으면 중지\n    random_state=42\n)',
+ ans:'① 1e-5  ② 100',
+ exp:'tol: 수렴 판단 임곗값. 그레이디언트 벡터의 노름이 tol보다 작아지면 수렴한 것으로 간주.\nn_iter_no_change: 지정한 횟수만큼 개선이 없으면 조기 종료.'},
+
+{id:84, type:'obj', cat:'전처리',
+ q:'다음 중 특성 스케일링이 필요 없는 알고리즘은?',
+ choices:['LinearSVC','SGDClassifier','정규 방정식 (Normal Equation)','SGDRegressor'],
+ ans:2,
+ exp:'정규 방정식과 SVD는 수학적으로 직접 최적해를 구하므로 스케일 조정이 필요 없다.\n경사 하강법 계열(배치GD, SGD, 미니배치GD)과 SVM 계열은 모두 스케일 조정이 필요.'},
+
+{id:85, type:'sub', cat:'소프트맥스',
+ q:'소프트맥스 회귀에서 다음을 설명하시오.\n\n(1) n_inputs와 n_outputs의 의미\n(2) Theta 행렬의 shape\n(3) 예측 시 argmax를 사용하는 이유',
+ ans:'(1) n_inputs: 입력 특성 수(편향 포함), n_outputs: 출력 클래스 수\n(2) Theta.shape = (n_inputs, n_outputs) — 각 열이 하나의 클래스에 대한 파라미터 벡터\n(3) 각 클래스의 확률(softmax 출력) 중 가장 높은 클래스 인덱스를 선택하기 위해',
+ exp:'붓꽃 예시: n_inputs=3(편향+꽃잎길이+꽃잎너비), n_outputs=3(Setosa/Versicolor/Virginica)\ny_predict = Y_proba.argmax(axis=1): 행마다(샘플마다) 가장 높은 확률의 열(클래스) 인덱스 반환'}
+
+,
+
+{id:23, type:'code', cat:'전처리',
+ q:'다음 코드의 출력 결과를 예측하시오.\n\nhousing_cat = np.array([["INLAND"],["NEAR BAY"],["INLAND"],["ISLAND"]])\nencoder = OrdinalEncoder()\nencoded = encoder.fit_transform(housing_cat)\nprint(encoded)\nprint(encoder.categories_)',
+ ans:'출력:\n[[0.], [2.], [0.], [1.]]\n[array(["INLAND","ISLAND","NEAR BAY"])]\n\n알파벳순 정렬: INLAND=0, ISLAND=1, NEAR BAY=2',
+ exp:'OrdinalEncoder는 카테고리를 알파벳순 정렬 후 숫자로 인코딩. 문제점: 순서 없는 범주형에 순서를 부여해 ML 알고리즘이 오해할 수 있음.'},
+
+{id:25, type:'code', cat:'다항회귀',
+ q:'다항 회귀 파이프라인 코드의 빈칸을 채우시오.\n\npoly_reg = make_pipeline(\n    PolynomialFeatures(degree=①, include_bias=False),\n    StandardScaler(),\n    LinearRegression()\n)\n\n# 특성 1개일 때 변환 후 특성 개수: ② 개',
+ ans:'① 2  ② 2개 (x, x²)',
+ exp:'PolynomialFeatures(degree=2, include_bias=False): 원래 특성 x에 x²을 추가. 특성 2개이면 x₁, x₂, x₁², x₁x₂, x₂² 총 5개.'},
+
+{id:26, type:'code', cat:'로지스틱회귀',
+ q:'다음 출력이 나오도록 빈칸을 채우시오.\n\nsoftmax_reg.predict(①)\n# 출력: array([2])  꽃잎 길이 5cm 너비 2cm → Virginica\n\nsoftmax_reg.predict_proba([[5,2]]).round(2)\n# 출력: array([[0., 0.04, 0.96]])',
+ ans:'① [[5, 2]]',
+ exp:'LogisticRegression은 클래스 3개이므로 자동으로 소프트맥스 회귀 사용. predict()는 가장 높은 확률의 클래스 인덱스 반환 → 클래스 2(Virginica) 확률 96%.'},
+
+{id:27, type:'code', cat:'경사하강법',
+ q:'배치 경사 하강법 구현 코드의 빈칸을 채우시오.\n\nfor epoch in range(n_epochs):\n    gradients = ① * X_b.T @ (X_b @ theta - y)\n    theta = theta - ② * gradients',
+ ans:'① 2/m  ② eta',
+ exp:'MSE 그레이디언트 벡터: (2/m)X^T(Xθ-y). 파라미터 업데이트: θ = θ - η×∇MSE(θ). SGD에서는 2/m이 아닌 2를 쓴다.'},
+
+{id:40, type:'code', cat:'전처리',
+ q:'다음 코드의 출력 결과를 예측하시오.\n\ncat_encoder = OneHotEncoder()\nhousing_cat = np.array([["INLAND"],["NEAR BAY"],["ISLAND"]])\ncat_encoder.fit_transform(housing_cat).toarray()\n\ncat_encoder.handle_unknown = "ignore"\ndf_test = np.array([["INLAND"],["<2H OCEAN"]])\nprint(cat_encoder.transform(df_test).toarray())',
+ ans:'출력:\n[[1. 0. 0.]\n [0. 0. 0.]]\n\nINLAND=0번째 열=1, <2H OCEAN은 알 수 없는 카테고리 → 모두 0',
+ exp:'OneHotEncoder fit 시 알파벳순 정렬. handle_unknown="ignore": 알 수 없는 카테고리는 모든 열을 0으로 처리.'},
+
+{id:42, type:'code', cat:'소프트맥스',
+ q:'다음 출력이 나오도록 빈칸을 채우시오.\n\n# 훈련 완료 후 학습된 파라미터 확인\n①\n\n# shape = (3, 3): 3개 입력 × 3개 클래스',
+ ans:'① Theta',
+ exp:'소프트맥스 직접 구현에서 파라미터 행렬 Theta.shape = (n_inputs, n_outputs) = (3, 3). 각 열이 하나의 클래스에 대한 파라미터 벡터.'},
+
+{id:59, type:'sub', cat:'전처리',
+ q:'ClusterSimilarity 클래스에 대해 답하시오.\n\n(1) BaseEstimator와 TransformerMixin을 상속받는 이유?\n(2) fit()에서 sample_weight를 사용하는 이유?\n(3) transform()의 출력 특성 수는?',
+ ans:'(1) BaseEstimator: get_params()/set_params() 자동 제공\n    TransformerMixin: fit_transform() 메서드 자동 제공\n(2) 주택 가격을 가중치로 주면 고가 지역에 클러스터 중심이 집중됨\n(3) n_clusters개 (각 클러스터 중심과의 RBF 유사도)',
+ exp:'transform()은 각 샘플과 n_clusters개 클러스터 중심 사이의 RBF 유사도 계산 → (m, n_clusters) 행렬 반환.'}
+
+
+,
+
+{id:86, type:'sub', cat:'MNIST',
+ q:'다음 빈칸을 채우시오.\n\nmnist = fetch_openml(\'mnist_784\', ①=False)\n\nas_frame=False로 지정하는 이유는?',
+ ans:'① as_frame\n\n이유: fetch_openml()은 기본적으로 입력을 pandas DataFrame, 레이블을 pandas Series로 반환하지만, MNIST는 이미지 데이터라 DataFrame에 맞지 않으므로 numpy 배열로 받기 위해',
+ exp:'MNIST 데이터: 7만 개 이미지, 28×28=784개 특성. X.shape=(70000,784), y.shape=(70000,). 훈련(앞 6만개)/테스트(뒤 1만개)로 이미 분리되어 있음.'},
+
+{id:87, type:'obj', cat:'MNIST',
+ q:'sklearn.datasets 패키지의 함수 종류에 대한 설명으로 옳은 것은?',
+ choices:['fetch_*는 사이킷런에 번들로 포함된 소규모 데이터셋을 로드한다','load_*는 실전 데이터셋을 인터넷에서 다운로드한다','make_*는 테스트에 유용한 가짜(합성) 데이터셋을 생성한다','fetch_*와 load_*는 동일한 기능을 수행한다'],
+ ans:2,
+ exp:'fetch_*: 실전 데이터셋 다운로드 (fetch_openml, fetch_california_housing 등)\nload_*: 사이킷런에 번들로 포함된 소규모 데이터셋 로드 (load_iris, load_wine 등)\nmake_*: 테스트용 가짜 데이터셋 생성 (make_moons, make_blobs 등)'},
+
+{id:88, type:'sub', cat:'선형회귀',
+ q:'다음 선형 회귀 예측 공식에서 각 기호의 의미를 설명하시오.\n\nŷ = θ₀ + θ₁x₁ + ··· + θₙxₙ = θᵀx (벡터 형태)\n\n(1) ŷ의 의미\n(2) θ₀의 의미\n(3) bold θ (파라미터 벡터)의 의미\n(4) x₀의 값',
+ ans:'(1) ŷ: 예측값\n(2) θ₀: 편향(bias) 또는 절편\n(3) bold θ: θ₀~θₙ까지 가중치를 담은 파라미터 벡터\n(4) x₀ = 1 (항상 1, 편향 항 계산을 위해)',
+ exp:'벡터 형태: ŷ = h_θ(x) = θ·x (점곱). θᵀx = θ₀x₀ + θ₁x₁ + ··· + θₙxₙ과 같음. x₀=1이므로 θ₀x₀=θ₀.'},
+
+{id:89, type:'obj', cat:'선형회귀',
+ q:'MSE(평균 제곱 오차)와 RMSE(평균 제곱근 오차)의 관계에 대한 설명으로 옳은 것은?',
+ choices:['MSE를 최소화하는 것과 RMSE를 최소화하는 것은 다른 결과를 낳는다','RMSE = √MSE이며, MSE를 최소화하면 RMSE도 최소화된다','RMSE는 회귀에서 사용하고 MSE는 분류에서 사용한다','MSE가 항상 RMSE보다 크다'],
+ ans:1,
+ exp:'RMSE = √MSE. 같은 θ에서 최소값을 가지므로 MSE를 최소화하는 것이 RMSE를 최소화하는 것과 같은 결과를 낸다. 실제로는 RMSE보다 MSE를 최소화하는 것이 더 간단해서 비용 함수로 사용.'},
+
+{id:90, type:'sub', cat:'경사하강법',
+ q:'MSE 비용 함수가 볼록 함수(convex function)인 것이 경사 하강법에 왜 유리한지 설명하시오.',
+ ans:'볼록 함수는 어떤 두 점을 선택해 선을 그어도 곡선을 가로지르지 않는 함수이다. 이는 지역 최솟값(local minimum)이 없고 전역 최솟값(global minimum)이 하나만 존재한다는 의미이다. 따라서 경사 하강법이 어디서 시작하든 반드시 전역 최솟값에 도달할 수 있다.',
+ exp:'반면 비볼록 함수(예: 신경망의 비용 함수)는 지역 최솟값이 여러 개 있어 경사 하강법이 전역 최솟값에 도달하지 못할 수 있다.'},
+
+{id:91, type:'obj', cat:'전처리',
+ q:'OneHotEncoder의 출력이 기본적으로 numpy 배열이 아닌 사이파이 희소 행렬(sparse matrix)인 이유로 옳은 것은?',
+ choices:['희소 행렬이 numpy 배열보다 항상 계산이 빠르기 때문','0이 대부분인 행렬을 0이 아닌 값과 그 위치만 저장해 메모리를 절약하기 위해','사이킷런이 희소 행렬만 지원하기 때문','numpy 배열로 변환이 불가능하기 때문'],
+ ans:1,
+ exp:'OneHotEncoder는 카테고리 수만큼 열을 생성하는데 각 행에서 1인 값은 하나뿐이고 나머지는 모두 0. 희소 행렬은 0이 아닌 값과 그 위치만 저장해 메모리 절약. toarray()로 numpy 배열로 변환 가능.'},
+
+{id:92, type:'code', cat:'전처리',
+ q:'FunctionTransformer를 사용해 변환기를 만드는 코드의 빈칸을 채우시오.\n\n# 로그 변환기\nlog_transformer = ①(np.log, inverse_func=np.exp)\n\n# 비율 계산 변환기\nratio_transformer = ①(lambda X: X[:, [0]] / X[:, [1]])',
+ ans:'① FunctionTransformer',
+ exp:'FunctionTransformer: 함수를 변환기로 감싸는 클래스. fit()은 아무것도 안 하고 transform()에서 지정한 함수를 적용. inverse_func로 역변환 함수도 지정 가능.'},
+
+{id:93, type:'sub', cat:'전처리',
+ q:'다음을 설명하시오.\n\n(1) SimpleImputer.fit() 후 statistics_ 속성에는 무엇이 저장되는가?\n(2) 검증/테스트 세트에 transform()만 적용해야 하는 이유는?',
+ ans:'(1) statistics_: 각 특성의 중간값(strategy=\'median\')이 계산되어 저장됨. 훈련 세트의 통계값.\n(2) 검증/테스트 세트에 fit_transform()을 쓰면 해당 세트의 통계로 새로 계산되어 데이터 누수(data leakage) 발생. 반드시 훈련 세트 통계(statistics_)를 그대로 적용해야 함.',
+ exp:'imputer.statistics_ == housing_num.median().values로 확인 가능. fit()은 훈련 데이터에서만, transform()은 모든 데이터에 적용.'},
+
+{id:94, type:'sub', cat:'분류',
+ q:'다중 출력 분류(Multi-output Classification)를 설명하고 예시를 드시오.',
+ ans:'다중 레이블 분류에서 한 레이블이 다중 클래스가 될 수 있도록 일반화한 것. 각 레이블이 두 개 이상의 값을 가질 수 있다.\n\n예시: 이미지 잡음 제거 시스템 — 입력: 잡음 있는 MNIST 이미지, 출력: 깨끗한 이미지의 픽셀 강도 배열(784개 값, 각각 0~255). 각 픽셀이 하나의 레이블이고 그 값이 다중 클래스(0~255).',
+ exp:'KNeighborsClassifier로 구현 가능. 입력: X_train + noise, 타깃: X_train(원본). 픽셀 강도 예측 = 다중 출력 분류.'},
+
+{id:95, type:'code', cat:'분류',
+ q:'데이터 증식(Data Augmentation) 코드의 빈칸을 채우시오.\n\nfrom scipy.ndimage import ①\n\ndef shift_image(image, dx, dy):\n    image = image.②((28, 28))\n    shifted = ①(image, [dy, dx], cval=0, mode=\'constant\')\n    return shifted.reshape(③)',
+ ans:'① shift  ② reshape  ③ [-1]  (또는 [784])',
+ exp:'scipy.ndimage.shift(): 이미지를 픽셀 단위로 이동. [dy, dx] 순서 주의 — dy가 먼저(위아래), dx가 두 번째(좌우). cval=0: 빈 공간을 0으로 채움. reshape([-1]): 2D→1D로 펼침.'},
+
+{id:96, type:'obj', cat:'규제',
+ q:'릿지(Ridge)와 라쏘(Lasso)의 비용 함수 그래프에서 L1과 L2 패널티의 모양 차이로 옳은 것은?',
+ choices:['L1은 원 모양이고 L2는 마름모 모양이다','L1은 각진 마름모 모양이고 L2는 원 모양이다','L1과 L2 모두 원 모양이다','L1과 L2 모두 마름모 모양이다'],
+ ans:1,
+ exp:'L1(라쏘): 절댓값 합 → 각진 마름모(꼭짓점에서 축과 만남) → 가중치가 정확히 0이 됨(특성 선택)\nL2(릿지): 제곱 합 → 원 모양 → 어느 방향에서도 부드럽게 만남 → 가중치가 0에 가깝지만 완전히 0은 안 됨\n이것이 라쏘가 자동 특성 선택을 수행하는 기하학적 이유!'},
+
+{id:97, type:'sub', cat:'SVM',
+ q:'다항식 커널에서 degree와 coef0 파라미터의 역할을 설명하고, 과대적합/과소적합 시 각각 어떻게 조절해야 하는지 쓰시오.',
+ ans:'degree: 다항식의 차수. 과대적합 → degree 줄이기, 과소적합 → degree 늘리기\ncoef0: 모델이 높은 차수와 낮은 차수에 얼마나 영향을 받을지 조절 (높은 차수의 영향력 조절)\n\n교수님 강조: 10차 커널이 3차보다 결정 경계가 더 복잡 → 과대적합 위험. C가 동일할 때 복잡도 줄이려면 degree를 줄이는 것이 해결책.',
+ exp:'SVC(kernel="poly", degree=3, coef0=1, C=5) 형태로 사용. coef0이 클수록 높은 차수 항의 영향이 커짐.'},
+
+{id:98, type:'code', cat:'전처리',
+ q:'다음은 파이프라인 단계 이름을 통해 하이퍼파라미터에 접근하는 코드이다. 빈칸을 채우시오.\n\n# Pipeline에서 하이퍼파라미터 접근 형식\nparam_grid = {\n    \'①__geo__n_clusters\': [5, 8, 10],\n    \'random_forest__②\': [4, 6, 8]\n}\n\n# 파이프라인 단계 이름 확인\nfull_pipeline.③',
+ ans:'① preprocessing  ② max_features  ③ named_steps (또는 steps)',
+ exp:'"단계이름__파라미터명" 또는 "단계이름__하위단계명__파라미터명" 형식. named_steps: 파이프라인의 각 단계를 이름으로 접근. steps: (이름, 추정기) 튜플 리스트.'},
+
+{id:99, type:'obj', cat:'앙상블',
+ q:'K-폴드 교차 검증에서 cv=10으로 설정했을 때의 동작으로 옳은 것은?',
+ choices:['전체 데이터를 10개의 겹치지 않는 폴드로 나누고, 매번 다른 폴드를 검증에 사용하여 10번 훈련한다','전체 데이터를 10번 반복 샘플링해 10개의 서로 다른 훈련 세트를 만든다','검증 세트 크기가 전체의 10%가 된다','10개의 모델을 병렬로 훈련시킨다'],
+ ans:0,
+ exp:'K-폴드: 훈련 세트를 K개의 폴드로 분할 → 매번 하나의 폴드를 검증에, 나머지 K-1개를 훈련에 사용 → K번 반복 → K개의 평가 점수 배열 반환. cross_val_score(scoring="neg_root_mean_squared_error")는 음수로 반환하므로 부호 반전(-) 필요.'},
+
+{id:100, type:'sub', cat:'종합',
+ q:'다음 각 상황에서 적절한 대처 방법을 쓰시오.\n\n(1) 선형 회귀 모델의 RMSE가 검증 세트에서 너무 높을 때 (과소적합)\n(2) RandomForest 모델이 훈련 세트에서는 RMSE≈0인데 검증 세트에서 높을 때 (과대적합)\n(3) 특성이 100만 개이고 샘플이 적을 때 선형 회귀 훈련 방법\n(4) 일부 특성만 유용할 것으로 의심될 때 사용하는 규제',
+ ans:'(1) 더 복잡한 모델 사용, 더 좋은 특성 추가, 규제 줄이기\n(2) 모델 단순화, 규제 추가, 더 많은 훈련 데이터 확보\n(3) 경사 하강법(SGD 또는 미니배치 GD) — 정규방정식은 n이 크면 느림\n(4) 라쏘(Lasso) 회귀 — 불필요한 특성 가중치를 0으로 만듦',
+ exp:'실제 캘리포니아 주택 예측에서: LinearRegression RMSE≈69,858, DecisionTree RMSE≈0(과대적합), RandomForest RMSE≈17,474(여전히 과대적합 but 더 나음).'}
+
+
+,
+
+{id:101, type:'obj', cat:'전처리',
+ q:'다음 중 Ridge와 Lasso 회귀에서 alpha 파라미터의 역할로 옳은 것은?',
+ choices:['alpha가 클수록 규제가 약해져 모델이 복잡해진다','alpha가 클수록 규제가 강해져 가중치가 작아지고 모델이 단순해진다','alpha=0이면 가중치가 모두 0이 된다','alpha는 학습률과 동일한 역할을 한다'],
+ ans:1,
+ exp:'alpha(α)는 규제 강도를 결정. alpha 클수록 규제 강함 → 가중치 더 많이 억제 → 모델 단순 → 과소적합 위험. alpha=0이면 규제 없음 = 일반 선형 회귀. ※ SVM의 C와 반대 방향! C 클수록 규제 약함, alpha 클수록 규제 강함.'},
+
+{id:102, type:'sub', cat:'로지스틱회귀',
+ q:'로지스틱 회귀의 C 파라미터와 SVM의 C 파라미터를 비교하여 설명하시오.',
+ ans:'로지스틱 회귀 C: 규제 강도의 역수 → C 클수록 규제 약함(복잡한 모델), C 작을수록 규제 강함(단순한 모델)\nSVM C: 동일하게 규제 강도의 역수 → C 클수록 오차 허용 적음(과대적합 위험), C 작을수록 오차 허용 많음(일반화 좋음)\n\n두 모델 모두 C가 클수록 규제가 약해지는 방향이다. Ridge/Lasso의 alpha와는 반대 방향.',
+ exp:'헷갈리기 쉬운 포인트: LogisticRegression(C=100) → 규제 거의 없음 / Ridge(alpha=100) → 규제 매우 강함. C = 1/alpha 관계.'},
+
+{id:103, type:'sub', cat:'전처리',
+ q:'다음을 설명하시오.\n\n(1) 왜 훈련 세트, 검증 세트, 테스트 세트를 분리하는가?\n(2) 테스트 세트는 언제 사용해야 하는가?\n(3) 검증 세트 대신 교차 검증을 사용하는 이유는?',
+ ans:'(1) 훈련: 모델 학습 / 검증: 하이퍼파라미터 튜닝 및 모델 선택 / 테스트: 최종 일반화 성능 추정\n(2) 최종 모델 선택이 완전히 끝난 후 딱 한 번만 사용\n(3) 데이터가 적을 때 검증 세트를 별도로 떼면 훈련 데이터가 줄어드는 문제 → 교차 검증으로 데이터를 최대한 활용',
+ exp:'테스트 세트를 여러 번 사용하면 → 데이터 스누핑 편향 발생 → 지나치게 낙관적인 성능 추정.'},
+
+{id:104, type:'code', cat:'선형회귀',
+ q:'다음 코드의 빈칸을 채우고, neg_root_mean_squared_error를 쓰는 이유를 설명하시오.\n\nrmse_scores = cross_val_score(tree_reg, housing, housing_labels,\n    scoring=\'①\', cv=10)\n\n# RMSE 값으로 변환\ntree_rmse_scores = ②(rmse_scores)',
+ ans:'① neg_root_mean_squared_error  ② np.sqrt(-  (또는 -rmse_scores 후 np.sqrt, 혹은 직접 -rmse_scores)\n\n이유: 사이킷런의 cross_val_score는 크면 좋은 점수 기준. RMSE는 작을수록 좋으므로 음수로 반환 → 부호 반전(-) 후 사용.',
+ exp:'scoring="neg_root_mean_squared_error"는 -RMSE를 반환. np.sqrt(-rmse_scores) 또는 -rmse_scores로 실제 RMSE값 획득. squared=False 옵션 대신 scoring으로 처리하는 방식.'},
+
+{id:105, type:'code', cat:'선형회귀',
+ q:'mean_squared_error()로 RMSE를 직접 계산하는 두 가지 방법의 빈칸을 채우시오.\n\n# 방법 1: squared 파라미터 사용\nrmse = mean_squared_error(y_test, y_pred, ①=False)\n\n# 방법 2: sqrt 사용\nrmse = np.②(mean_squared_error(y_test, y_pred))',
+ ans:'① squared  ② sqrt',
+ exp:'squared=False이면 RMSE 직접 반환 (사이킷런 0.22.2+). squared=True(기본값)이면 MSE 반환. 연습문제 11번에서 rnd_search_cv 성능 평가 시 사용.'},
+
+{id:106, type:'sub', cat:'전처리',
+ q:'다음 housing.corr() 결과에서 median_house_value와 가장 상관관계가 높은 특성이 median_income이라면, 이를 통해 알 수 있는 것과 scatter plot으로 추가로 확인해야 할 사항을 설명하시오.',
+ ans:'알 수 있는 것: median_income이 높을수록 median_house_value도 높아지는 강한 양의 상관관계가 있어 예측에 유용한 특성임\n\n추가 확인: 산점도에서 가격 상한선(cap) 존재 여부 확인 — 일부 데이터가 특정 값(e.g., 50만 달러)에 몰려 있으면 그 구역을 제거하는 것이 모델 품질 향상에 도움.',
+ exp:'corr()는 -1~1 범위의 피어슨 상관계수. 1에 가까울수록 강한 양의 상관. 상관계수는 선형 관계만 측정하므로 비선형 관계는 놓칠 수 있음.'},
+
+{id:107, type:'code', cat:'전처리',
+ q:'다음은 훈련/검증/테스트 분리 코드이다. 빈칸을 채우시오.\n\n# 기본 분리 (기본값: test_size=0.2)\nX_train, X_test, y_train, y_test = ①(\n    X, y, test_size=②, random_state=42\n)\n\n# 계층적 샘플링\nX_train, X_test, y_train, y_test = ①(\n    X, y, test_size=0.2,\n    ③=y_cat, random_state=42\n)',
+ ans:'① train_test_split  ② 0.2  ③ stratify',
+ exp:'기본 test_size=0.2 = 80/20 분리. stratify: 타깃의 클래스 비율을 훈련/테스트 세트에서 동일하게 유지. random_state=42로 재현 가능성 보장.'},
+
+{id:108, type:'obj', cat:'파이프라인',
+ q:'사이킷런 Pipeline에서 fit()을 호출할 때 내부 동작으로 옳은 것은?',
+ choices:['모든 단계에서 fit()만 호출된다','마지막 단계를 제외한 모든 단계에서 fit_transform()을 순서대로 호출하고, 마지막 단계에서는 fit()을 호출한다','모든 단계에서 fit_transform()을 호출한다','첫 번째 단계만 fit()하고 나머지는 transform()만 호출한다'],
+ ans:1,
+ exp:'Pipeline.fit() 내부 동작:\n1단계~(N-1)단계: fit_transform() 순서대로 호출 (변환기)\n마지막 단계: fit() 호출 (추정기)\npredict() 호출 시: 1~(N-1)단계 transform() → 마지막 단계 predict()'},
+
+{id:109, type:'sub', cat:'모델튜닝',
+ q:'다음을 설명하시오.\n\n(1) StratifiedShuffleSplit과 train_test_split(stratify=...)의 차이\n(2) StratifiedShuffleSplit을 사용하는 경우',
+ ans:'(1) train_test_split(stratify=...): 한 번 분리. StratifiedShuffleSplit: 여러 번(n_splits) 반복해서 분리 → 여러 개의 훈련/테스트 세트 쌍 생성\n(2) 데이터가 적거나 분리를 여러 번 반복해서 평균 성능을 구하고 싶을 때. 계층적 샘플링을 유지하면서 교차 검증할 때.',
+ exp:'StratifiedShuffleSplit(n_splits=1, test_size=0.2)이면 train_test_split(stratify=...)과 동일한 결과. KFold의 계층화 버전은 StratifiedKFold.'},
+
+{id:110, type:'sub', cat:'전처리',
+ q:'K-평균(KMeans) 클러스터링에서 n_clusters 하이퍼파라미터를 튜닝하는 방법을 설명하고, GridSearchCV에서 접근하는 코드 형식을 쓰시오.',
+ ans:'튜닝 방법: GridSearchCV 또는 RandomizedSearchCV로 여러 값(예: [5, 8, 10]) 탐색 후 교차 검증 점수가 가장 좋은 값 선택\n\nGridSearchCV 접근 형식:\n"preprocessing__geo__n_clusters": [5, 8, 10]\n(파이프라인단계__하위단계__파라미터명)\n최적값: rnd_search.best_params_["preprocessing__geo__n_clusters"]',
+ exp:'ClusterSimilarity는 ColumnTransformer 내부의 "geo" 단계에 포함. 파이프라인 내 중첩된 파라미터는 __ 로 계속 연결해서 접근.'}
+
+
+];
+
+// ═══════════════════════════════════
+//  상태
+
+// ═══════════════════════════════════
+//  상태
+// ═══════════════════════════════════
+let mode = 'all';
+let questions = [];
+let cur = 0;
+let score = 0;
+let skipped = 0;
+let wrongList = [];
+let answered = false;
+let totalQ = 0;
+
+function selectMode(m, el) {
+  mode = m;
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function startQuiz() {
+  let pool = [...ALL_Q];
+  if (mode === 'obj') pool = ALL_Q.filter(q => q.type === 'obj');
+  else if (mode === 'sub') pool = ALL_Q.filter(q => q.type === 'sub');
+  else if (mode === 'code') pool = ALL_Q.filter(q => q.type === 'code');
+  else if (mode === 'random20') {
+    pool = [...ALL_Q].sort(() => Math.random() - 0.5).slice(0, 20);
+  }
+  questions = pool.sort(() => Math.random() - 0.5);
+  cur = 0; score = 0; skipped = 0; wrongList = [];
+  totalQ = questions.length;
+  showScreen('quiz-screen');
+  renderQ();
+}
+
+function retryAll() {
+  questions = [...questions].sort(() => Math.random() - 0.5);
+  cur = 0; score = 0; skipped = 0; wrongList = [];
+  showScreen('quiz-screen');
+  renderQ();
+}
+
+function retryWrong() {
+  if (wrongList.length === 0) { alert('틀린 문제가 없습니다! 🎉'); return; }
+  questions = wrongList.sort(() => Math.random() - 0.5);
+  totalQ = questions.length;
+  cur = 0; score = 0; skipped = 0; wrongList = [];
+  showScreen('quiz-screen');
+  renderQ();
+}
+
+function goHome() {
+  showScreen('start-screen');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ═══════════════════════════════════
+//  문제 렌더링
+// ═══════════════════════════════════
+function renderQ() {
+  if (cur >= questions.length) { showResult(); return; }
+  const q = questions[cur];
+  answered = false;
+
+  // 상단바
+  document.getElementById('qnum-label').textContent = `${cur+1} / ${totalQ}`;
+  document.getElementById('prog').style.width = `${(cur/totalQ)*100}%`;
+  document.getElementById('score-live').textContent = `✓ ${score}`;
+
+  // 배지
+  const badge = document.getElementById('q-badge');
+  badge.textContent = q.type === 'obj' ? '객관식' : q.type === 'sub' ? '단답형' : '코드 문제';
+  badge.className = 'q-badge ' + q.type;
+  document.getElementById('q-num-badge').textContent = `Q${q.id}`;
+
+  // 문제 텍스트
+  document.getElementById('q-text').innerHTML = fmtText(q.q);
+
+  // 코드 블록 (q.code 있으면)
+  const extra = document.getElementById('q-extra');
+  extra.innerHTML = q.code ? `<div class="code-block">${q.code}</div>` : '';
+
+  // 피드백 초기화
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback-box';
+  fb.innerHTML = '';
+
+  // 버튼 리셋
+  document.getElementById('btn-check').style.display = 'inline-block';
+  document.getElementById('btn-check').disabled = true;
+  document.getElementById('btn-next').style.display = 'none';
+
+  // 객관식 vs 단답형/코드
+  const choicesEl = document.getElementById('choices');
+  const inputArea = document.getElementById('input-area');
+
+  if (q.type === 'obj') {
+    choicesEl.style.display = 'flex';
+    inputArea.style.display = 'none';
+    choicesEl.innerHTML = q.choices.map((c, i) =>
+      `<button class="choice-btn" onclick="selectChoice(this, ${i})">
+        <span class="ch-label">${['①','②','③','④'][i]}</span>
+        <span>${fmtText(c)}</span>
+      </button>`
+    ).join('');
+  } else {
+    choicesEl.style.display = 'none';
+    inputArea.style.display = 'block';
+    const ta = document.getElementById('user-input');
+    ta.value = '';
+    ta.disabled = false;
+    ta.rows = q.type === 'code' ? 3 : 4;
+    ta.oninput = () => { document.getElementById('btn-check').disabled = ta.value.trim() === ''; };
+    document.getElementById('btn-check').disabled = false; // 단답형은 항상 확인 가능
+  }
+}
+
+function fmtText(t) {
+  if (!t) return '';
+  return t
+    .replace(/\n/g, '<br>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+let selectedChoice = -1;
+
+function selectChoice(el, idx) {
+  document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedChoice = idx;
+  document.getElementById('btn-check').disabled = false;
+}
+
+function checkAnswer() {
+  if (answered) return;
+  answered = true;
+  const q = questions[cur];
+  const fb = document.getElementById('feedback');
+
+  if (q.type === 'obj') {
+    const correct = q.ans;
+    const buttons = document.querySelectorAll('.choice-btn');
+    buttons.forEach((b, i) => {
+      b.disabled = true;
+      if (i === correct) b.classList.add('correct');
+      else if (i === selectedChoice) b.classList.add('wrong');
+      else b.classList.add('dimmed');
+    });
+    const isCorrect = selectedChoice === correct;
+    if (isCorrect) { score++; }
+    else { wrongList.push(q); }
+
+    fb.className = `feedback-box show ${isCorrect ? 'correct' : 'wrong'}`;
+    fb.innerHTML = `
+      <div class="feedback-title">${isCorrect ? '✅ 정답!' : '❌ 오답'}</div>
+      <div class="feedback-ans">${isCorrect ? '잘 했어요!' : `<strong>정답: ${['①','②','③','④'][correct]}</strong> ${fmtText(q.choices[correct])}`}</div>
+      <div class="feedback-exp">${fmtText(q.exp)}</div>`;
+  } else {
+    wrongList.push(q);
+    fb.className = 'feedback-box show info';
+    fb.innerHTML = `
+      <div class="feedback-title">📋 정답 확인</div>
+      <div class="feedback-ans"><strong>모범 답안:</strong><br>${fmtText(q.ans)}</div>
+      <div class="feedback-exp">${fmtText(q.exp)}</div>`;
+    document.getElementById('user-input').disabled = true;
+  }
+
+  document.getElementById('btn-check').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'inline-block';
+  document.getElementById('score-live').textContent = `✓ ${score}`;
+  selectedChoice = -1;
+}
+
+function nextQ() {
+  cur++;
+  renderQ();
+}
+
+function skipQ() {
+  skipped++;
+  wrongList.push(questions[cur]);
+  cur++;
+  renderQ();
+}
+
+// ═══════════════════════════════════
+//  결과
+// ═══════════════════════════════════
+function showResult() {
+  showScreen('result-screen');
+  const pct = Math.round((score / totalQ) * 100);
+  const emoji = pct >= 90 ? '🏆' : pct >= 70 ? '🎉' : pct >= 50 ? '💪' : '📚';
+  const title = pct >= 90 ? '완벽해요!' : pct >= 70 ? '잘 했어요!' : pct >= 50 ? '조금 더 공부해요!' : '다시 한번!';
+
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-score').innerHTML = `${score}<span>/${totalQ}</span>`;
+  document.getElementById('result-sub').textContent = `정답률 ${pct}% · 건너뜀 ${skipped}문제`;
+  document.getElementById('r-correct').textContent = score;
+  document.getElementById('r-wrong').textContent = totalQ - score - skipped;
+  document.getElementById('r-skip').textContent = skipped;
+
+  // 범주별 결과
+  const cats = {};
+  questions.forEach(q => {
+    if (!cats[q.cat]) cats[q.cat] = {total:0, correct:0};
+    cats[q.cat].total++;
+  });
+  wrongList.forEach(q => {
+    if (cats[q.cat]) cats[q.cat].correct--;
+  });
+  questions.forEach(q => { if (cats[q.cat]) cats[q.cat].correct = Math.max(0, cats[q.cat].correct); });
+
+  // 재계산: 카테고리별 정답 수
+  const catScore = {};
+  questions.forEach(q => { if (!catScore[q.cat]) catScore[q.cat] = {total:0, c:0}; catScore[q.cat].total++; });
+  const wrongIds = new Set(wrongList.map(q => q.id));
+  questions.forEach(q => { if (!wrongIds.has(q.id)) catScore[q.cat].c++; });
+
+  const catHtml = Object.entries(catScore).map(([cat, v]) => {
+    const p = Math.round((v.c / v.total) * 100);
+    const color = p >= 80 ? '#3fb950' : p >= 50 ? '#d29922' : '#f85149';
+    return `<div class="cat-row">
+      <div class="cat-label">${cat}</div>
+      <div class="cat-bar-wrap"><div class="cat-bar" style="width:${p}%;background:${color}"></div></div>
+      <div class="cat-pct" style="color:${color}">${p}%</div>
+    </div>`;
+  }).join('');
+  document.getElementById('cat-result').innerHTML = catHtml;
+}
+</script>
+</body>
+</html>
